@@ -74,9 +74,11 @@ export const OnboardingFlow: React.FC = () => {
     }, 300);
   };
 
-  /* Auto-advance once the scan completes — no manual click required. */
+  /* Auto-advance once the scan completes — no manual click required.
+     Guarded by a ref so navigating Back into step 2 doesn't re-fire. */
   useEffect(() => {
-    if (step === 2 && scanProgress >= 100 && !isScanning) {
+    if (step === 2 && scanProgress >= 100 && !isScanning && !autoAdvancedRef.current) {
+      autoAdvancedRef.current = true;
       const t = setTimeout(() => setStep(3), 900);
       return () => clearTimeout(t);
     }
