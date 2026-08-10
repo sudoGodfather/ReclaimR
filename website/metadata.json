@@ -1,0 +1,6 @@
+{
+  "name": "RECLAIMR",
+  "description": "Stop the Rot, Start the Growth. India's 1st Wealth-Protection & Micro-Diversion Agent turning sub-rot into wealth-growth.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

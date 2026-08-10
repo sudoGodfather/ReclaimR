@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-bg: #F7F5F1;
+  --color-surface: #FFFFFF;
+  --color-muted: #EFEDE7;
+  --color-ink: #17181A;
+  --color-ink-static: #17181A;
+  --color-ink-dark: #17181A;
+  --color-ink-lift: #232327;
+  --color-ink-line: #3A3A40;
+  --color-on-dark: #FFFFFF;
+  --color-muted-on-dark: #A9A49B;
+  --color-on-accent: #FFFFFF;
+  --color-brass: #B78A3A;
+  --color-brass-deep: #9C6B1F;
+  --color-terra: #B3542E;
+  --color-terra-deep: #8F3F21;
+  --color-jade: #3E7D5A;
+  --color-jade-deep: #356C4E;
+  --color-blue: #47608F;
+  --color-blue-deep: #3B4F78;
+  --color-crimson: #B83A4B;
+  --color-terra-tint: #F7E9E3;
+  --color-jade-tint: #E9F2EC;
+  --color-brass-tint: #F5EFE0;
+  --color-muted-text: #4A463E;
+  --color-shadow: #17181A;
+}
+
+.dark {
+  --color-bg: #121316;
+  --color-surface: #1B1C20;
+  --color-muted: #222329;
+  --color-ink: #EDEDF0;
+  --color-ink-static: #17181A;
+  --color-ink-dark: #121316;
+  --color-ink-lift: #2C2D33;
+  --color-ink-line: #33343A;
+  --color-on-dark: #EDEDF0;
+  --color-muted-on-dark: #A9A49B;
+  --color-on-accent: #17181A;
+  --color-brass: #D6B25E;
+  --color-brass-deep: #C19A3F;
+  --color-terra: #D97E54;
+  --color-terra-deep: #A95F3C;
+  --color-jade: #7FC9A0;
+  --color-jade-deep: #6FB892;
+  --color-blue: #8FA8D9;
+  --color-blue-deep: #7C96C8;
+  --color-crimson: #E06A78;
+  --color-terra-tint: #221F1B;
+  --color-jade-tint: #1C2420;
+  --color-brass-tint: #242018;
+  --color-muted-text: #A9A49B;
+  --color-shadow: #050607;
+}
