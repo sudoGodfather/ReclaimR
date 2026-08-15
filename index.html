@@ -2,14 +2,100 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ReclaimR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    
+    <!-- Primary Metadata -->
+    <title>ReclaimR — Stop the Rot. Start the Growth.</title>
+    <meta name="title" content="ReclaimR — Stop the Rot. Start the Growth." />
+    <meta name="description" content="ReclaimR is an on-device personal finance intervention that audits silent UPI AutoPay mandates, revokes unused subscriptions with 1 tap, and automatically channels reclaimed cash into Nifty 50 Index SIPs." />
+    <meta name="author" content="ReclaimR Labs" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://reclaimr.app/" />
+
+    <!-- Favicon & Web App Manifest -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Umami Privacy Telemetry Script -->
+    <script
+      async
+      src="https://analytics.reclaimr.app/script.js"
+      data-website-id="reclaimr-analytics-id"
+      data-domains="reclaimr.app"
+    ></script>
+
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ReclaimR" />
+    <meta property="og:url" content="https://reclaimr.app/" />
+    <meta property="og:title" content="ReclaimR — Stop the Rot. Start the Growth." />
+    <meta property="og:description" content="On-device financial intervention detecting hidden UPI AutoPay mandates and automatically compounding reclaimed cash into Nifty 50 SIPs." />
+    <meta property="og:image" content="https://reclaimr.app/og-image.jpg" />
+    <meta property="og:locale" content="en_IN" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@ReclaimR" />
+    <meta name="twitter:title" content="ReclaimR — Stop the Rot. Start the Growth." />
+    <meta name="twitter:description" content="Stop paying for forgotten subscriptions. Reclaim your monetary sovereignty." />
+    <meta name="twitter:image" content="https://reclaimr.app/og-image.jpg" />
+
+    <!-- JSON-LD Structured Data: SoftwareApplication with Offers -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "ReclaimR",
+        "url": "https://reclaimr.app",
+        "operatingSystem": "iOS, Android, Web",
+        "applicationCategory": "FinanceApplication",
+        "description": "On-device intelligence detecting hidden UPI AutoPay mandates and automatically compounding reclaimed cash into Nifty 50 SIPs.",
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Free Tier",
+            "price": "0",
+            "priceCurrency": "INR",
+            "description": "On-device scan up to 5 subscriptions"
+          },
+          {
+            "@type": "Offer",
+            "name": "Plus Tier",
+            "price": "149",
+            "priceCurrency": "INR",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "149",
+              "priceCurrency": "INR",
+              "unitCode": "MON"
+            },
+            "description": "Unlimited mandate detection, 1-tap revocation, automated Nifty 50 SIP compounding"
+          },
+          {
+            "@type": "Offer",
+            "name": "Lifetime Tier",
+            "price": "1999",
+            "priceCurrency": "INR",
+            "description": "Lifetime unlimited detection & revocation with priority routing"
+          }
+        ]
+      }
+    </script>
+
+    <!-- Theme Initialization Script -->
     <script>
       (function () {
         try {
-          var t = localStorage.getItem('paisapalat-theme');
-          var dark = t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-          if (dark) document.documentElement.classList.add('dark');
+          var t = localStorage.getItem('reclaimr-theme');
+          if (t === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else if (t === 'dim') {
+            document.documentElement.classList.add('dark', 'dim');
+          } else if (!t && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+          }
         } catch (e) {}
       })();
     </script>
@@ -19,4 +105,3 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

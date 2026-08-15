@@ -1,450 +1,270 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AGENT_PERSONALITIES, INITIAL_GOALS } from '../data/mockData';
-import { Zap, ArrowRight, Lock } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { ClickableCard } from '../components/ui';
-import { sipFutureValue, formatLakhs, formatINR } from '../utils/finance';
-
-const AGENT_STORAGE_KEY = 'reclaimr-agent-id';
-const GOAL_STORAGE_KEY = 'reclaimr-goal-id';
-
-function loadPref(key: string, fallback: string): string {
-  try {
-    return localStorage.getItem(key) ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function savePref(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    /* non-fatal */
-  }
-}
+import { ArrowRight, CheckCircle2, ShieldCheck, Sparkles, Terminal, Flame, Zap, UserCheck } from 'lucide-react';
+import { EditorialInput, EditorialSelect } from '../components/ui/FormPrimitives';
+import { ScrollReveal } from '../motion/ScrollPrimitives';
+import { SEO } from '../components/SEO';
 
 export const OnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
-  const { subscriptions } = useApp();
+
+  // 4-Step Wizard State
   const [step, setStep] = useState<number>(1);
   const [userName, setUserName] = useState<string>('Aarav Sharma');
   const [phone, setPhone] = useState<string>('+91 98765 43210');
-  const [isScanning, setIsScanning] = useState<boolean>(false);
+  const [bank, setBank] = useState<string>('HDFC Bank');
+  const [selectedAgent, setSelectedAgent] = useState<string>('savage');
+  const [selectedGoal, setSelectedGoal] = useState<string>('Japan Trip 2026');
   const [scanProgress, setScanProgress] = useState<number>(0);
-  const [selectedAgentId, setSelectedAgentId] = useState<string>(() =>
-    loadPref(AGENT_STORAGE_KEY, 'savage-auditor'),
-  );
-  const [selectedGoalId, setSelectedGoalId] = useState<string>(() =>
-    loadPref(GOAL_STORAGE_KEY, 'japan-trip'),
-  );
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const autoAdvancedRef = useRef<boolean>(false);
+  const [isScanning, setIsScanning] = useState<boolean>(false);
 
-  const rottingSubs = subscriptions.filter((s) => s.status === 'rotting');
-  const totalRotMonthly = rottingSubs.reduce((acc, s) => acc + s.cost, 0);
-  const selectedGoal = INITIAL_GOALS.find((g) => g.id === selectedGoalId) || INITIAL_GOALS[0];
-
-  useEffect(() => {
-    savePref(AGENT_STORAGE_KEY, selectedAgentId);
-  }, [selectedAgentId]);
-  useEffect(() => {
-    savePref(GOAL_STORAGE_KEY, selectedGoalId);
-  }, [selectedGoalId]);
-
-  useEffect(() => () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  }, []);
-
-  const startScanSimulation = () => {
+  const handleNextStep1 = (e: React.FormEvent) => {
+    e.preventDefault();
+    setStep(2);
+    // Start automated SMS scan simulation
     setIsScanning(true);
-    setScanProgress(0);
-    autoAdvancedRef.current = false;
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      setScanProgress((prev) => {
-        if (prev >= 100) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          setIsScanning(false);
-          return 100;
-        }
-        return prev + 20;
-      });
-    }, 300);
+    let p = 0;
+    const timer = setInterval(() => {
+      p += 15;
+      setScanProgress(p);
+      if (p >= 100) {
+        clearInterval(timer);
+        setIsScanning(false);
+      }
+    }, 400);
   };
 
-  /* Auto-advance once the scan completes — no manual click required.
-     Guarded by a ref so navigating Back into step 2 doesn't re-fire. */
-  useEffect(() => {
-    if (step === 2 && scanProgress >= 100 && !isScanning && !autoAdvancedRef.current) {
-      autoAdvancedRef.current = true;
-      const t = setTimeout(() => setStep(3), 900);
-      return () => clearTimeout(t);
-    }
-  }, [step, scanProgress, isScanning]);
-
-  const handleNextStep = () => {
-    if (step === 1) {
-      setStep(2);
-      startScanSimulation();
-    } else if (step < 4) {
-      setStep(step + 1);
-    } else {
-      navigate('/dashboard');
-    }
-  };
-
-  const handleBack = () => {
-    if (isScanning) return; // Block leaving mid-scan: state would go stale
-    setStep((s) => s - 1);
+  const handleFinishOnboarding = () => {
+    navigate('/dashboard');
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 font-sans space-y-8">
-      {/* Step Header Indicator */}
-      <div className="bg-ink-dark text-on-dark p-4 border-4 border-ink shadow-[6px_6px_0px_0px_var(--color-brass)] flex flex-wrap items-center justify-between gap-4">
+    <div className="max-w-[760px] mx-auto px-6 py-12 font-sans-clean text-[var(--color-ink-primary)] space-y-8">
+      <SEO
+        title="Start 2-Min Audit — Wealth Protection Onboarding"
+        description="4-step telemetry setup: connect local SMS parsing, scan active debit mandates, configure your autonomous agent persona, and allocate reclaimed subscription cash."
+        canonicalPath="/onboarding"
+      />
+      {/* Wizard Header Stepper */}
+      <div className="flex items-center justify-between font-mono-tactile border-b border-[var(--color-paper-border)] pb-6">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="bg-terra text-on-accent px-2 py-0.5 text-xs font-mono font-black uppercase">
-              STEP {step} OF 4
-            </span>
-            <span className="text-brass text-xs font-mono font-bold">
-              RECLAIMR WEALTH ONBOARDING
-            </span>
-          </div>
-          <h1 className="text-2xl font-mono font-black uppercase tracking-tight text-on-dark mt-1">
-            {step === 1 && '1. Verify Identity & Bank Permissions'}
-            {step === 2 && '2. Autonomous Subscription Rot Scan'}
-            {step === 3 && '3. Choose Your Autonomous Agent'}
-            {step === 4 && '4. Set Your Primary Wealth Goal'}
+          <span className="eyebrow text-[#1B4D3E] dark:text-[#2D6A4F] block">ONBOARDING & TELEMETRY SETUP</span>
+          <h1 className="font-serif-editorial text-[28px] font-[600] tracking-tight mt-0.5">
+            Step 0{step} of 04 — {step === 1 && 'Identity & Bank Mandates'}
+            {step === 2 && 'Autonomous SMS Log Scan'}
+            {step === 3 && 'Agent Persona Selection'}
+            {step === 4 && 'First Wealth Goal Allocation'}
           </h1>
         </div>
 
-        <div className="flex gap-1">
-          {[1, 2, 3, 4].map((s) => (
-            <div
-              key={s}
-              className={`w-10 h-3 border-2 border-white font-mono text-[10px] flex items-center justify-center font-bold ${
-                s === step
-                  ? 'bg-brass text-ink-static'
-                  : s < step
-                  ? 'bg-jade text-ink-static'
-                  : 'bg-ink-lift text-muted-on-dark'
-              }`}
-            >
-              0{s}
-            </div>
-          ))}
+        <div className="flex items-center gap-1.5 text-[11px] font-[600] bg-[var(--color-paper-card)] px-3 py-1 rounded-none border border-[var(--color-paper-border)]">
+          <span className="text-[#10B981]">STEP {step} / 4</span>
         </div>
       </div>
 
-      {/* Step 1: Identity & Permissions */}
+      {/* STEP 1: IDENTITY & LOGIN / SIGNUP FORM */}
       {step === 1 && (
-        <div className="bg-surface border-4 border-ink p-6 sm:p-8 shadow-[8px_8px_0px_0px_var(--color-shadow)] space-y-6">
-          <div className="border-l-4 border-terra pl-4 space-y-1">
-            <h2 className="text-xl font-mono font-black uppercase text-ink">
-              Connect Your Bank Mandates & SMS Scraper
-            </h2>
-            <p className="text-sm text-muted-text">
-              ReclaimR reads SMS transactions locally on your device to parse recurring debit notifications (UPI AutoPay, E-mandates, NACH). Zero bank login credentials needed.
+        <ScrollReveal direction="up" className="p-6 md:p-8 rounded-none bg-[var(--color-paper-surface)] border border-[var(--color-paper-border)] shadow-[var(--shadow-md)] space-y-6">
+          <div className="space-y-1">
+            <h2 className="font-serif-editorial text-[22px] font-[600]">Provide your telemetry details</h2>
+            <p className="text-[13px] text-[var(--color-ink-secondary)]">
+              Used solely on-device to match UPI AutoPay SMS debit notifications. Zero cloud data storage.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono">
-            <div>
-              <label htmlFor="onboard-name" className="block text-xs font-black uppercase mb-1">Your Name</label>
-              <input
-                id="onboard-name"
-                type="text"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                className="w-full bg-muted border-2 border-ink p-3 text-sm font-bold focus:outline-none focus:bg-brass/20 focus-visible:ring-2 focus-visible:ring-terra"
-              />
-            </div>
-            <div>
-              <label htmlFor="onboard-phone" className="block text-xs font-black uppercase mb-1">Mobile Number (UPI Linked)</label>
-              <input
-                id="onboard-phone"
-                type="text"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-muted border-2 border-ink p-3 text-sm font-bold focus:outline-none focus:bg-brass/20 focus-visible:ring-2 focus-visible:ring-terra"
-              />
-            </div>
-          </div>
+          <form onSubmit={handleNextStep1} className="space-y-5">
+            <EditorialInput
+              label="Full Name"
+              type="text"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              helperText="Will appear on your monthly wealth audit statements"
+              required
+            />
 
-          <div className="bg-terra-tint border-2 border-ink p-4 space-y-3 font-mono">
-            <div className="flex items-center gap-2 text-xs font-black text-terra uppercase">
-              <Lock className="w-4 h-4" />
-              <span>SECURITY & PRIVACY GUARANTEE</span>
-            </div>
-            <ul className="text-xs text-ink space-y-1 font-sans">
-              <li>✔ Read-only SMS parsing for transaction keywords (e.g., "debited for Netflix", "Hotstar Mandate").</li>
-              <li>✔ Bank account numbers and passcodes are NEVER requested or stored.</li>
-              <li>✔ Fully compliant with RBI Digital Lending & AutoPay Mandate guidelines.</li>
-            </ul>
-          </div>
+            <EditorialInput
+              label="Mobile Number (SMS Scan)"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              helperText="Requires local SMS log permission on Android/iOS"
+              required
+            />
 
-          <button
-            type="button"
-            onClick={handleNextStep}
-            className="w-full bg-terra text-on-accent font-mono font-black text-lg py-4 border-2 border-ink shadow-[4px_4px_0px_0px_var(--color-shadow)] hover:bg-terra-deep cursor-pointer uppercase flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
-          >
-            <span>Grant Read-Only Scan Access</span>
-            <ArrowRight className="w-5 h-5 stroke-[3]" />
-          </button>
-        </div>
-      )}
+            <EditorialSelect
+              label="Primary Salary Bank"
+              value={bank}
+              onChange={(e) => setBank(e.target.value)}
+              options={[
+                { value: 'HDFC Bank', label: 'HDFC Bank Direct AutoPay' },
+                { value: 'ICICI Bank', label: 'ICICI Bank iMobile E-Mandate' },
+                { value: 'SBI', label: 'State Bank of India YONO' },
+                { value: 'Axis Bank', label: 'Axis Bank AutoPay Gateway' },
+              ]}
+              helperText="Configures bank-specific e-mandate revocation protocol"
+            />
 
-      {/* Step 2: Scanning Simulation */}
-      {step === 2 && (
-        <div className="bg-surface border-4 border-ink p-6 sm:p-8 shadow-[8px_8px_0px_0px_var(--color-shadow)] space-y-6">
-          <div className="border-l-4 border-brass pl-4 space-y-1">
-            <h2 className="text-xl font-mono font-black uppercase text-ink">
-              Scanning UPI AutoPay & SMS Transaction Logs...
-            </h2>
-            <p className="text-sm text-muted-text">
-              Parsing 1,240 SMS records across HDFC, ICICI, SBI, Cred, and Paytm.
-            </p>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="space-y-2 font-mono">
-            <div className="flex justify-between text-xs font-black uppercase">
-              <label htmlFor="scan-progress">SCAN PROGRESS</label>
-              <span className="text-terra">{scanProgress}% COMPLETE</span>
-            </div>
-            <div className="w-full bg-muted border-2 border-ink h-6 overflow-hidden relative">
-              <div
-                id="scan-progress"
-                role="progressbar"
-                aria-valuenow={scanProgress}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                className="bg-brass h-full border-r-2 border-ink transition-all duration-300 flex items-center justify-center text-xs font-black text-ink-static"
-                style={{ width: `${scanProgress}%` }}
+            <div className="pt-2">
+              <button
+                type="submit"
+                data-cursor-label="CONTINUE"
+                className="w-full h-[52px] rounded-none bg-[#1A1A18] text-white dark:bg-[#F4F0E6] dark:text-[#1A1A18] font-[600] text-[15px] hover:bg-black transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg"
               >
-                {scanProgress > 20 && `${scanProgress}%`}
-              </div>
+                <span>Authorize & Scan Mandates</span>
+                <ArrowRight className="w-4 h-4 text-[#10B981]" />
+              </button>
+            </div>
+          </form>
+        </ScrollReveal>
+      )}
+
+      {/* STEP 2: AUTONOMOUS SMS SCAN LOG */}
+      {step === 2 && (
+        <ScrollReveal direction="up" className="p-6 md:p-8 rounded-none bg-[#1A1A18] text-white space-y-6 shadow-2xl border border-white/10 font-mono-tactile">
+          <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+            <Terminal className="w-5 h-5 text-[#10B981]" />
+            <h2 className="font-serif-editorial text-[20px] font-[600]">Parsing Device SMS & E-Mandate Logs</h2>
+          </div>
+
+          <div className="space-y-3 text-[13px] text-white/80 font-mono-tactile">
+            <div className="flex items-center gap-2 text-[#10B981]">
+              <span>[0.0s]</span> <span>Initialized local device log parser v4.2</span>
+            </div>
+            <div className="flex items-center gap-2 text-white/90">
+              <span>[0.4s]</span> <span>Scanned 284 SMS notifications from HDFC AutoPay</span>
+            </div>
+            <div className="flex items-center gap-2 text-[#C93B2B]">
+              <span>[0.8s]</span> <span>Detected rot mandate: Netflix Premium (₹649/mo) — 47d unused</span>
+            </div>
+            <div className="flex items-center gap-2 text-[#C93B2B]">
+              <span>[1.2s]</span> <span>Detected rot mandate: Cult.fit Elite (₹1,750/mo) — 64d unused</span>
+            </div>
+            <div className="flex items-center gap-2 text-[#C93B2B]">
+              <span>[1.6s]</span> <span>Detected rot mandate: Disney+ Hotstar VIP (₹299/mo) — 32d unused</span>
+            </div>
+            <div className="flex items-center gap-2 text-[#C93B2B]">
+              <span>[2.0s]</span> <span>Detected rot mandate: Duolingo Super (₹299/mo) — 51d unused</span>
+            </div>
+            <div className="flex items-center gap-2 text-[#C93B2B]">
+              <span>[2.4s]</span> <span>Detected rot mandate: Times Prime (₹100/mo) — 120d unused</span>
+            </div>
+            <div className="flex items-center gap-2 text-[#10B981]">
+              <span>[2.8s]</span> <span>Total monthly leak identified: ₹3,097/month</span>
             </div>
           </div>
 
-          {/* Realtime Detection Log Feed */}
-          <div className="bg-ink-dark text-jade font-mono text-xs p-4 border-2 border-ink h-48 overflow-y-auto space-y-2" aria-live="polite">
-            <p className="text-on-dark">▶ [0.1s] Initializing SMS Scraper Module v2.4...</p>
-            <p>▶ [0.3s] Found mandate: HDFC-NETFLIX-649-AUTOPAY (Last watch: 47 days ago)</p>
-            {scanProgress >= 40 && (
-              <p>▶ [0.6s] Found mandate: DISNEY-HOTSTAR-299-RECURRING (Decay score: 72%)</p>
-            )}
-            {scanProgress >= 60 && (
-              <p className="text-terra">▶ [0.9s] CRITICAL ROT DETECTED: CULT.FIT ELITE ₹1,750/m (0 visits in 64 days)</p>
-            )}
-            {scanProgress >= 80 && (
-              <p>▶ [1.2s] Found mandate: DUOLINGO-SUPER-299 (Streak broken 50 days ago)</p>
-            )}
-            {scanProgress >= 100 && (
-              <p className="text-brass font-black">
-                ✔ SCAN COMPLETE: {rottingSubs.length} ROTTING SUBSCRIPTIONS DETECTED (TOTAL BLEED: {formatINR(totalRotMonthly)}/MONTH)
-              </p>
-            )}
+          <div className="w-full bg-white/10 h-2 rounded-none overflow-hidden">
+            <div className="bg-[#10B981] h-full rounded-none transition-all duration-300" style={{ width: `${scanProgress}%` }} />
           </div>
 
-          <div className="flex gap-4">
+          <div className="pt-2">
             <button
               type="button"
-              onClick={handleBack}
+              onClick={() => setStep(3)}
               disabled={isScanning}
-              className="bg-surface text-ink font-mono font-bold px-4 py-3 border-2 border-ink shadow-[2px_2px_0px_0px_var(--color-shadow)] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
+              className="w-full h-[50px] rounded-none bg-white text-[#1A1A18] font-[600] text-[15px] hover:bg-white/90 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={handleNextStep}
-              disabled={scanProgress < 100}
-              className={`flex-1 font-mono font-black text-lg py-4 border-2 border-ink uppercase flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
-                scanProgress >= 100
-                  ? 'bg-brass text-ink-static shadow-[4px_4px_0px_0px_var(--color-shadow)] hover:bg-brass-deep cursor-pointer'
-                  : 'bg-muted text-muted-text cursor-not-allowed'
-              }`}
-            >
-              <span>{scanProgress >= 100 ? 'Proceed to Agent Selection' : `Scanning... (${scanProgress}%)`}</span>
-              <ArrowRight className="w-5 h-5 stroke-[3]" />
+              <span>Proceed to Agent Selection →</span>
             </button>
           </div>
-        </div>
+        </ScrollReveal>
       )}
 
-      {/* Step 3: Choose Agent Personality */}
+      {/* STEP 3: AGENT PERSONA SELECTION */}
       {step === 3 && (
-        <div className="bg-surface border-4 border-ink p-6 sm:p-8 shadow-[8px_8px_0px_0px_var(--color-shadow)] space-y-6">
-          <div className="border-l-4 border-blue pl-4 space-y-1">
-            <h2 className="text-xl font-mono font-black uppercase text-ink">
-              Select Your Autonomous Agent Personality
-            </h2>
-            <p className="text-sm text-muted-text">
-              This AI agent dictates how aggressive ReclaimR is when cancelling unused subscriptions and prompting micro-diversions.
+        <ScrollReveal direction="up" className="p-6 md:p-8 rounded-none bg-[var(--color-paper-surface)] border border-[var(--color-paper-border)] shadow-[var(--shadow-md)] space-y-6">
+          <div className="space-y-1">
+            <h2 className="font-serif-editorial text-[22px] font-[600]">Select your Autonomous Reclaim Agent</h2>
+            <p className="text-[13px] text-[var(--color-ink-secondary)]">
+              Your AI agent continuously audits usage patterns and presents 1-tap cancellation advice.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {AGENT_PERSONALITIES.map((agent) => {
-              const isSelected = selectedAgentId === agent.id;
-              return (
-                <ClickableCard
-                  key={agent.id}
-                  onClick={() => setSelectedAgentId(agent.id)}
-                  aria-pressed={isSelected}
-                  aria-label={`Select agent: ${agent.name} (${agent.aggression})`}
-                  className={`border-4 border-ink p-5 transition-all flex flex-col justify-between space-y-4 ${
-                    isSelected
-                      ? 'bg-brass shadow-[6px_6px_0px_0px_var(--color-shadow)] translate-x-[-2px] translate-y-[-2px]'
-                      : 'bg-surface hover:bg-muted shadow-[3px_3px_0px_0px_var(--color-shadow)]'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-3xl">{agent.avatar}</span>
-                      <span
-                        className="text-[10px] font-mono font-black uppercase px-2 py-0.5 border border-ink text-on-dark"
-                        style={{ backgroundColor: agent.accentColor }}
-                      >
-                        {agent.aggression}
-                      </span>
-                    </div>
-
-                    <h3 className="font-mono font-black text-lg uppercase text-ink">
-                      {agent.name}
-                    </h3>
-                    <p className="text-xs font-bold text-muted-text font-mono">
-                      "{agent.tagline}"
-                    </p>
-                    <p className="text-xs text-muted-text leading-relaxed font-sans">
-                      {agent.description}
-                    </p>
+          <div className="space-y-4 font-mono-tactile">
+            {[
+              { id: 'savage', title: 'Savage Auditor AI', desc: 'Roasts wasteful subscriptions & forces action before renewal dates hit.', icon: Flame, color: '#C93B2B' },
+              { id: 'gentle', title: 'Gentle Nudge AI', desc: 'Politely suggests cancellation options after 45 consecutive unused days.', icon: UserCheck, color: '#6E8B74' },
+              { id: 'tactical', title: 'Tactical Wealth Engine', desc: 'Maximizes Nifty 50 compound yield projections with mathematical rigor.', icon: Zap, color: '#1B4D3E' },
+            ].map((agent) => (
+              <div
+                key={agent.id}
+                onClick={() => setSelectedAgent(agent.id)}
+                className={`p-5 rounded-none border cursor-pointer transition-all flex items-start gap-4 ${
+                  selectedAgent === agent.id
+                    ? 'border-[#1B4D3E] bg-[#1B4D3E]/10 dark:border-[#2D6A4F]'
+                    : 'border-[var(--color-paper-border)] bg-[var(--color-paper-surface)] hover:border-black/30'
+                }`}
+              >
+                <div className="w-10 h-10 rounded-none grid place-items-center bg-white dark:bg-[#1A1A18] shadow-sm shrink-0">
+                  <agent.icon className="w-5 h-5 text-[#1B4D3E] dark:text-[#2D6A4F]" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-[600] text-[16px] text-[var(--color-ink-primary)]">{agent.title}</h3>
+                    {selectedAgent === agent.id && <span className="text-[#10B981] font-[600] text-[11px]">ACTIVE</span>}
                   </div>
-
-                  <div className="pt-2 border-t-2 border-ink flex items-center justify-between font-mono text-xs font-black">
-                    <span>{isSelected ? '✓ SELECTED' : 'SELECT AGENT'}</span>
-                    <span>→</span>
-                  </div>
-                </ClickableCard>
-              );
-            })}
+                  <p className="font-sans-clean text-[13px] text-[var(--color-ink-secondary)]">{agent.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="flex gap-4 pt-2">
+          <div className="pt-2">
             <button
               type="button"
-              onClick={handleBack}
-              className="bg-surface text-ink font-mono font-bold px-4 py-3 border-2 border-ink shadow-[2px_2px_0px_0px_var(--color-shadow)] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
+              onClick={() => setStep(4)}
+              className="w-full h-[52px] rounded-none bg-[#1A1A18] text-white dark:bg-[#F4F0E6] dark:text-[#1A1A18] font-[600] text-[15px] hover:bg-black transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg"
             >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={handleNextStep}
-              className="flex-1 bg-blue text-on-accent font-mono font-black text-lg py-4 border-2 border-ink shadow-[4px_4px_0px_0px_var(--color-shadow)] hover:bg-blue-deep cursor-pointer uppercase flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
-            >
-              <span>Confirm Agent & Set Wealth Goal</span>
-              <ArrowRight className="w-5 h-5 stroke-[3]" />
+              <span>Next: Allocate First Wealth Goal →</span>
             </button>
           </div>
-        </div>
+        </ScrollReveal>
       )}
 
-      {/* Step 4: Set Micro-Investment Goal */}
+      {/* STEP 4: FIRST WEALTH GOAL */}
       {step === 4 && (
-        <div className="bg-surface border-4 border-ink p-6 sm:p-8 shadow-[8px_8px_0px_0px_var(--color-shadow)] space-y-6">
-          <div className="border-l-4 border-jade pl-4 space-y-1">
-            <h2 className="text-xl font-mono font-black uppercase text-ink">
-              Choose Where Your Sub-Rot Savings Get Diverted
-            </h2>
-            <p className="text-sm text-muted-text">
-              When ReclaimR cancels an unused debit, it automatically sets up an equivalent SIP into this goal.
+        <ScrollReveal direction="up" className="p-6 md:p-8 rounded-none bg-[var(--color-paper-surface)] border border-[var(--color-paper-border)] shadow-[var(--shadow-md)] space-y-6">
+          <div className="space-y-1">
+            <h2 className="font-serif-editorial text-[22px] font-[600]">Select your primary wealth goal</h2>
+            <p className="text-[13px] text-[var(--color-ink-secondary)]">
+              All money rescued from cancelled subscriptions will automatically flow into this goal.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {INITIAL_GOALS.map((goal) => {
-              const isSelected = selectedGoalId === goal.id;
-              return (
-                <ClickableCard
-                  key={goal.id}
-                  onClick={() => setSelectedGoalId(goal.id)}
-                  aria-pressed={isSelected}
-                  aria-label={`Select goal: ${goal.title}`}
-                  className={`border-4 border-ink p-5 transition-all flex flex-col justify-between space-y-4 ${
-                    isSelected
-                      ? 'bg-jade text-ink-static shadow-[6px_6px_0px_0px_var(--color-shadow)] translate-x-[-2px] translate-y-[-2px]'
-                      : 'bg-surface hover:bg-muted shadow-[3px_3px_0px_0px_var(--color-shadow)]'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-black bg-ink-dark text-on-dark px-2 py-0.5 uppercase">
-                        {goal.category}
-                      </span>
-                      <span className="text-xs font-mono font-bold">Target: {formatINR(goal.targetAmount)}</span>
-                    </div>
-
-                    <h3 className="font-mono font-black text-lg uppercase leading-tight">
-                      {goal.title}
-                    </h3>
-                    <p className="text-xs font-mono font-bold">
-                      Target Date: {goal.deadline}
-                    </p>
-                  </div>
-
-                  <div className="bg-on-accent/80 border-2 border-ink p-3 font-mono text-xs space-y-1">
-                    <div className="flex justify-between font-bold">
-                      <span>CURRENT SIP:</span>
-                      <span>{formatINR(goal.monthlyContribution)}/m</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-terra">
-                      <span>DIVERTED FROM ROT:</span>
-                      <span>+{formatINR(totalRotMonthly)}/m</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t-2 border-ink flex items-center justify-between font-mono text-xs font-black">
-                    <span>{isSelected ? '✓ PRIMARY GOAL' : 'SELECT GOAL'}</span>
-                    <span>→</span>
-                  </div>
-                </ClickableCard>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono-tactile">
+            {[
+              { id: 'Japan Trip 2026', target: '₹1,50,000', icon: '✈️' },
+              { id: 'Emergency Cushion', target: '₹2,00,000', icon: '🛡️' },
+              { id: 'Electric Scooter', target: '₹1,20,000', icon: '⚡' },
+            ].map((g) => (
+              <div
+                key={g.id}
+                onClick={() => setSelectedGoal(g.id)}
+                className={`p-5 rounded-none border cursor-pointer transition-all space-y-2 text-center ${
+                  selectedGoal === g.id
+                    ? 'border-[#10B981] bg-[#10B981]/10'
+                    : 'border-[var(--color-paper-border)] bg-[var(--color-paper-surface)]'
+                }`}
+              >
+                <div className="text-3xl">{g.icon}</div>
+                <h3 className="font-[600] text-[14px]">{g.id}</h3>
+                <span className="text-[11px] text-[var(--color-ink-tertiary)] block">Target: {g.target}</span>
+              </div>
+            ))}
           </div>
 
-          <div className="bg-brass border-4 border-ink p-4 text-ink-static font-mono space-y-2">
-            <div className="font-black text-sm uppercase flex items-center gap-2">
-              <Zap className="w-5 h-5 fill-ink-static" />
-              <span>READY TO LAUNCH YOUR ROT REPORT & DASHBOARD</span>
-            </div>
-            <p className="text-xs font-sans text-ink-static/85 leading-snug">
-              {rottingSubs.length} rotting subscriptions found ({formatINR(totalRotMonthly)}/m total bleed). Selected goal: <span className="font-bold underline">{selectedGoal.title}</span>. Diverting {formatINR(totalRotMonthly)}/m adds {formatLakhs(sipFutureValue(totalRotMonthly, 5))} over 5 years.
-            </p>
-          </div>
-
-          <div className="flex gap-4">
+          <div className="pt-2">
             <button
               type="button"
-              onClick={handleBack}
-              className="bg-surface text-ink font-mono font-bold px-4 py-3 border-2 border-ink shadow-[2px_2px_0px_0px_var(--color-shadow)] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
+              onClick={handleFinishOnboarding}
+              data-cursor-label="ENTER"
+              className="w-full h-[54px] rounded-none bg-[#1B4D3E] text-white dark:bg-[#2D6A4F] font-[600] text-[16px] hover:opacity-90 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xl"
             >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={handleNextStep}
-              className="flex-1 bg-terra text-on-accent font-mono font-black text-lg py-4 border-2 border-ink shadow-[4px_4px_0px_0px_var(--color-shadow)] hover:bg-terra-deep cursor-pointer uppercase flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
-            >
-              <span>Launch My Dashboard</span>
-              <ArrowRight className="w-5 h-5 stroke-[3]" />
+              <Sparkles className="w-5 h-5 text-[#10B981]" />
+              <span>Enter ReclaimR Cockpit →</span>
             </button>
           </div>
-        </div>
+        </ScrollReveal>
       )}
     </div>
   );

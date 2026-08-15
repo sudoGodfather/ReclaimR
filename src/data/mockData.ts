@@ -35,7 +35,7 @@ export const INITIAL_SUBSCRIPTIONS: Subscription[] = [
     watchCostPerUnit: '₹299 per month for 0 hrs viewing',
   },
   {
-    id: 'cult-pass-1800',
+    id: 'cult-pass-1750',
     name: 'Cult.fit Elite Pass',
     category: 'Fitness',
     cost: 1750,
@@ -99,7 +99,7 @@ export const INITIAL_SUBSCRIPTIONS: Subscription[] = [
     watchCostPerUnit: '₹299 per lesson',
   },
   {
-    id: 'youtube-149',
+    id: 'youtube-189',
     name: 'YouTube Premium Family',
     category: 'Streaming',
     cost: 189,
@@ -115,7 +115,7 @@ export const INITIAL_SUBSCRIPTIONS: Subscription[] = [
     watchCostPerUnit: '₹0.90 per hour',
   },
   {
-    id: 'times-prime-1199',
+    id: 'times-prime-100',
     name: 'Times Prime Annual',
     category: 'News',
     cost: 100,
@@ -139,7 +139,7 @@ export const INITIAL_GOALS: Goal[] = [
     currentAmount: 24500,
     monthlyContribution: 2698,
     icon: 'Plane',
-    deadline: 'March 2026',
+    deadline: 'March 2027',
     category: 'Travel',
     color: '#47608F',
   },
@@ -150,7 +150,7 @@ export const INITIAL_GOALS: Goal[] = [
     currentAmount: 112000,
     monthlyContribution: 1650,
     icon: 'ShieldAlert',
-    deadline: 'Dec 2025',
+    deadline: 'Dec 2027',
     category: 'Security',
     color: '#3E7D5A',
   },
@@ -161,7 +161,7 @@ export const INITIAL_GOALS: Goal[] = [
     currentAmount: 48000,
     monthlyContribution: 1750,
     icon: 'Laptop',
-    deadline: 'August 2025',
+    deadline: 'August 2027',
     category: 'Gadget',
     color: '#B78A3A',
   }
@@ -182,7 +182,7 @@ export const INITIAL_ALERTS: RotAlert[] = [
   },
   {
     id: 'alert-cult',
-    subscriptionId: 'cult-pass-1800',
+    subscriptionId: 'cult-pass-1750',
     subscriptionName: 'Cult.fit Elite Pass',
     type: 'unused_decay',
     title: 'Rot Alert: ₹1,750 Bleeding at Cult.fit',

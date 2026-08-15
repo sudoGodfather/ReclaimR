@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Zap, CheckCircle2, Flame, Calculator } from 'lucide-react';
+import { ArrowLeft, Sparkles, CheckCircle2, Flame, Calculator, ShieldCheck, Terminal, ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { sipFutureValue, sipTotalInvested, formatINR } from '../utils/finance';
+import { ScrollReveal, NumberCounter } from '../motion/ScrollPrimitives';
+import { GlassRangeSlider } from '../components/ui/GlassRangeSlider';
+import { SEO } from '../components/SEO';
+import { NotFoundScreen } from './NotFoundScreen';
 
 export const SubscriptionDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -10,223 +14,245 @@ export const SubscriptionDetail: React.FC = () => {
   const { subscriptions, executeCancellation } = useApp();
 
   const subscription = subscriptions.find((s) => s.id === id);
-  const isDiverted = subscription?.status === 'diverted';
-
-  const subName = subscription?.name ?? 'Netflix Premium (4K)';
-  const subCost = subscription?.cost ?? 649;
-  const lastDays = subscription?.lastUsedDaysAgo ?? 47;
-  const decay = subscription?.decayScore ?? 88;
 
   const [investmentYears, setInvestmentYears] = useState<number>(10);
   const [expectedCagr, setExpectedCagr] = useState<number>(12);
+  const [isExecuting, setIsExecuting] = useState<boolean>(false);
+  const [execStep, setExecStep] = useState<number>(0);
+
+  if (!subscription) {
+    return <NotFoundScreen />;
+  }
+
+  const isDiverted = subscription.status === 'diverted';
+  const subName = subscription.name;
+  const subCost = subscription.cost;
+  const lastDays = subscription.lastUsedDaysAgo;
+  const decay = subscription.decayScore;
+  const revokeToken = `#AUTOPAY-${subscription.id.split('-')[0].slice(0, 2).toUpperCase()}-${subscription.cost}`;
 
   const projectedWealth = sipFutureValue(subCost, investmentYears, expectedCagr);
   const totalOutOfPocket = sipTotalInvested(subCost, investmentYears);
-  const tenYearProjection = sipFutureValue(subCost, 10);
 
-  const handleConfirmCancel = () => {
-    executeCancellation(subscription?.id ?? 'netflix-649');
-    navigate(`/subscriptions/${subscription?.id ?? 'netflix-649'}/cancelled`);
-  };
+  // Stepped Execution Logic (Connected to AppContext executeCancellation)
+  const handleStartReclaim = () => {
+    setIsExecuting(true);
+    setExecStep(1);
 
-  const handleKeepSubscription = () => {
-    navigate('/subscriptions');
+    setTimeout(() => setExecStep(2), 600);
+    setTimeout(() => setExecStep(3), 1200);
+    setTimeout(() => {
+      executeCancellation(subscription.id);
+      navigate(`/subscriptions/${subscription.id}/cancelled`);
+    }, 1800);
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 font-sans space-y-8">
+    <div className="max-w-[980px] mx-auto px-6 py-10 font-sans-clean space-y-8 text-[var(--color-ink-primary)]">
+      <SEO
+        title={`${subName} Subscription Audit`}
+        description={`Audit rot score (${decay}%), cost (${formatINR(subCost)}/mo), and trigger 1-tap AutoPay cancellation for ${subName} in ReclaimR.`}
+        canonicalPath={`/subscriptions/${subscription.id}`}
+      />
       {/* Top Back Navigation Bar */}
-      <div className="flex items-center justify-between font-mono">
+      <div className="flex items-center justify-between font-mono-tactile">
         <button
           type="button"
           onClick={() => navigate('/subscriptions')}
-          className="bg-surface text-ink font-black text-xs px-4 py-2 border-2 border-ink shadow-[3px_3px_0px_0px_var(--color-shadow)] hover:bg-muted cursor-pointer flex items-center gap-2 uppercase focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
+          className="h-[38px] px-4 rounded-none bg-[var(--color-paper-surface)] border border-[var(--color-paper-border)] text-[13px] font-[600] hover:bg-[var(--color-paper-hover)] transition-colors cursor-pointer flex items-center gap-2"
         >
-          <ArrowLeft className="w-4 h-4 stroke-[3]" aria-hidden="true" />
-          <span>Back to Subscriptions</span>
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Subscriptions Ledger</span>
         </button>
 
-        <span className="bg-ink-dark text-brass font-black text-xs px-3 py-1 border border-ink uppercase">
-          AUDIT ID: ROT-{subscription?.id.toUpperCase() ?? 'NF-649'}
+        <span className="text-[11px] font-[600] tracking-[0.08em] uppercase px-3 py-1 rounded-none bg-[var(--color-paper-card)] text-[var(--color-ink-secondary)]">
+          AUDIT ID: ROT-{subscription.id.toUpperCase()}
         </span>
       </div>
 
-      {/* Main Brutalist Card */}
-      <div className="bg-surface border-4 border-ink p-6 sm:p-8 shadow-[10px_10px_0px_0px_var(--color-shadow)] space-y-8">
-        {/* Title & Decay Header */}
-        <div className="bg-brass border-4 border-ink p-6 shadow-[4px_4px_0px_0px_var(--color-shadow)] flex flex-wrap items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
+      {/* Main Execution Card */}
+      <div className="rounded-none bg-[var(--color-paper-surface)] p-6 md:p-10 shadow-[var(--shadow-lg)] border border-[var(--color-paper-border)] space-y-8 relative overflow-hidden">
+        
+        {/* Step 1 & 2: Before State & Decay Header */}
+        <div className="rounded-none bg-[var(--color-paper-card)] p-6 md:p-8 flex flex-wrap items-center justify-between gap-6 border border-[var(--color-paper-border)]">
+          <div className="space-y-2 max-w-xl">
+            <div className="flex items-center gap-2 font-mono-tactile">
               {isDiverted ? (
-                <span className="bg-jade text-ink-static font-mono font-black text-xs px-2.5 py-1 border border-ink uppercase flex items-center gap-1">
-                  <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-                  SUB-ROT TERMINATED
+                <span className="bg-[#10B981]/15 text-[#10B981] font-[600] text-[11px] px-3 py-1 rounded-none uppercase flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  MANDATE TERMINATED & RECLAIMED
                 </span>
               ) : (
-                <span className="bg-crimson text-on-accent font-mono font-black text-xs px-2.5 py-1 border border-ink uppercase flex items-center gap-1">
-                  <Flame className="w-4 h-4 fill-on-accent" aria-hidden="true" />
-                  CRITICAL SUB-ROT DETECTED
+                <span className="bg-[#C93B2B]/15 text-[#C93B2B] dark:text-[#E54D3C] font-[600] text-[11px] px-3 py-1 rounded-none uppercase flex items-center gap-1.5 animate-pulse">
+                  <Flame className="w-3.5 h-3.5 fill-[#C93B2B]" />
+                  BEFORE: {formatINR(subCost)}/MO LEAKING
                 </span>
               )}
-              <span className="bg-ink-dark text-on-dark font-mono font-bold text-xs px-2 py-1">
-                {subscription?.category ?? 'STREAMING'}
+              <span className="text-[11px] font-[600] px-2.5 py-1 rounded-none bg-black/5 dark:bg-white/10 text-[var(--color-ink-secondary)] uppercase">
+                {subscription.category}
               </span>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl font-mono font-black uppercase text-ink-static tracking-tight">
+            <h1 className="font-serif-editorial text-[32px] md:text-[48px] font-[600] tracking-tight leading-[0.95] pt-1">
               {subName}
             </h1>
-            <p className="text-sm font-bold text-ink-static font-mono">
-              Auto-debit of <span className="underline decoration-terra decoration-4 text-xl">{formatINR(subCost)}/month</span> hits in 3 days.
+            <p className="text-[15px] text-[var(--color-ink-secondary)] font-[500]">
+              Automated debit of <span className="text-[#C93B2B] dark:text-[#E54D3C] font-[600]">{formatINR(subCost)}/month</span> hits in 3 days. Zero login activity recorded in {lastDays} days.
             </p>
           </div>
 
-          <div className="bg-ink-dark text-brass border-2 border-ink p-4 text-center font-mono space-y-1">
-            <div className="text-4xl font-black text-crimson">{decay}%</div>
-            <div className="text-[10px] font-bold text-on-dark uppercase tracking-widest">DECAY SCORE</div>
+          <div className="rounded-none bg-[var(--color-paper-surface)] p-5 text-center min-w-[140px] shadow-sm border border-[var(--color-paper-border)] font-mono-tactile">
+            <div className="font-serif-editorial text-[40px] font-[600] text-[#C93B2B] dark:text-[#E54D3C] leading-none">{decay}%</div>
+            <div className="text-[10px] font-[600] text-[var(--color-ink-tertiary)] uppercase tracking-[0.08em] mt-1">Decay Score</div>
           </div>
         </div>
 
-        {/* Audit Evidence Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono">
-          <div className="bg-bg border-3 border-ink p-4 space-y-1">
-            <div className="text-xs font-bold text-muted-text uppercase">Last Login Activity</div>
-            <div className="text-2xl font-black text-terra">{lastDays} Days Unused</div>
-            <p className="text-[11px] text-muted-text font-sans">Last watched: Stranger Things S4 (June 2024)</p>
-          </div>
-
-          <div className="bg-bg border-3 border-ink p-4 space-y-1">
-            <div className="text-xs font-bold text-muted-text uppercase">Watch Cost / Episode</div>
-            <div className="text-2xl font-black text-ink">{formatINR(subCost)} / Ep</div>
-            <p className="text-[11px] text-muted-text font-sans">1 episode watched in 30 days = ₹{subCost} per episode</p>
-          </div>
-
-          <div className="bg-bg border-3 border-ink p-4 space-y-1">
-            <div className="text-xs font-bold text-muted-text uppercase">Cancellation API Status</div>
-            <div className="text-2xl font-black text-jade">{isDiverted ? 'Executed ✓' : '1-Tap Instant'}</div>
-            <p className="text-[11px] text-muted-text font-sans">UPI AutoPay e-mandate cancel signal ready</p>
-          </div>
-        </div>
-
-        {/* Savage Auditor AI Advice Box */}
-        <div className="bg-ink-dark text-on-dark border-4 border-ink p-5 shadow-[4px_4px_0px_0px_var(--color-terra)] space-y-3 font-mono">
-          <div className="flex items-center gap-2 text-brass text-sm font-black uppercase">
-            <Zap className="w-5 h-5 fill-brass" aria-hidden="true" />
-            <span>SAVAGE AUDITOR RECOMMENDATION</span>
-          </div>
-          <p className="text-sm font-sans text-muted-on-dark leading-relaxed">
-            "Paying {formatINR(subCost)}/m for 0 hours of watch time is financial negligence. Cancelling {subName.split(' ')[0]} today and diverting {formatINR(subCost)}/m into your <span className="text-jade font-bold">Cherry Blossom Japan Trip Fund</span> adds <span className="text-brass font-bold">{formatINR(tenYearProjection)}</span> over 10 years at 12% CAGR. Do not feed the streaming zombie."
-          </p>
-        </div>
-
-        {/* Wealth Compounding Simulator */}
-        <div className="bg-jade-tint border-4 border-ink p-6 space-y-4 font-mono">
-          <div className="flex items-center justify-between border-b-2 border-ink pb-3">
-            <div className="flex items-center gap-2">
-              <Calculator className="w-5 h-5 text-ink" aria-hidden="true" />
-              <h3 className="font-black text-lg uppercase text-ink">
-                Micro-SIP Diversion Wealth Projection
-              </h3>
+        {/* Financial Impact Comparison Box */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Before: Leaking */}
+          <div className="p-6 rounded-none bg-[#C93B2B]/10 border border-[#C93B2B]/30 space-y-2 font-mono-tactile">
+            <span className="text-[10px] font-[600] text-[#C93B2B] dark:text-[#E54D3C] uppercase tracking-wider block">STATE BEFORE RECLAIM</span>
+            <div className="font-serif-editorial text-[32px] font-[600] text-[#C93B2B] dark:text-[#E54D3C]">
+              {formatINR(subCost)} / month
             </div>
-            <span className="bg-jade text-ink-static text-xs font-black px-2 py-0.5 border border-ink uppercase">
-              NIFTY 50 INDEX / GOLD ETF
+            <span className="text-[11px] text-[var(--color-ink-secondary)] block font-sans-clean">
+              💸 Bleeding into streaming server rot. Annual loss: {formatINR(subCost * 12)}.
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <div className="flex justify-between text-xs font-bold uppercase mb-1">
-                <label htmlFor="detail-years" className="cursor-pointer">Investment Horizon:</label>
-                <span className="text-ink font-black">{investmentYears} Years</span>
-              </div>
-              <input
-                id="detail-years"
-                type="range"
-                min="3"
-                max="20"
-                value={investmentYears}
-                onChange={(e) => setInvestmentYears(Number(e.target.value))}
-                className="w-full accent-ink h-3 bg-muted border-2 border-ink cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
-              />
+          {/* After: Reclaimed */}
+          <div className="p-6 rounded-none bg-[#10B981]/10 border border-[#10B981]/30 space-y-2 font-mono-tactile">
+            <span className="text-[10px] font-[600] text-[#10B981] uppercase tracking-wider block">STATE AFTER RECLAIM</span>
+            <div className="font-serif-editorial text-[32px] font-[600] text-[#10B981]">
+              {formatINR(projectedWealth)}
             </div>
+            <span className="text-[11px] text-[var(--color-ink-secondary)] block font-sans-clean">
+              📈 Diverted into Nifty 50 SIP at 12% CAGR over {investmentYears} years.
+            </span>
+          </div>
+        </div>
 
-            <div>
-              <div className="flex justify-between text-xs font-bold uppercase mb-1">
-                <label htmlFor="detail-cagr" className="cursor-pointer">Expected CAGR:</label>
-                <span className="text-ink font-black">{expectedCagr}% / Year</span>
-              </div>
-              <input
-                id="detail-cagr"
-                type="range"
-                min="8"
-                max="18"
-                value={expectedCagr}
-                onChange={(e) => setExpectedCagr(Number(e.target.value))}
-                className="w-full accent-jade h-3 bg-muted border-2 border-ink cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
-              />
+        {/* Wealth Compounding Simulator */}
+        <div className="rounded-none bg-[var(--color-paper-card)] p-6 md:p-8 space-y-6 border border-[var(--color-paper-border)] font-mono-tactile">
+          <div className="flex justify-between items-center border-b border-[var(--color-paper-border)] pb-4">
+            <div className="flex items-center gap-2">
+              <Calculator className="w-5 h-5 text-[#1B4D3E] dark:text-[#2D6A4F]" />
+              <h3 className="font-serif-editorial font-[600] text-[18px] tracking-tight">
+                Micro-SIP Diversion Wealth Projection
+              </h3>
             </div>
+            <span className="bg-[#10B981]/15 text-[#10B981] text-[11px] font-[600] px-3 py-1 rounded-none uppercase">
+              Nifty 50 Index Fund
+            </span>
           </div>
 
-          <div className="bg-surface border-3 border-ink p-4 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <div className="text-xs font-bold text-muted-text uppercase">Total Diverted Out-Of-Pocket</div>
-              <div className="text-xl font-black text-ink">
-                {formatINR(totalOutOfPocket)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <div className="flex justify-between text-[13px] font-[600]">
+                <span className="text-[var(--color-ink-secondary)]">Investment Horizon:</span>
+                <span className="font-[600]">{investmentYears} Years</span>
               </div>
+              <GlassRangeSlider
+                value={investmentYears}
+                min={3}
+                max={20}
+                step={1}
+                trackHeight={6}
+                ariaLabel="Investment Horizon"
+                onChange={setInvestmentYears}
+              />
             </div>
 
-            <div>
-              <div className="text-xs font-bold text-muted-text uppercase">Projected Wealth Compounded</div>
-              <div className="text-3xl font-black text-blue">
-                {formatINR(projectedWealth)}
+            <div className="space-y-2">
+              <div className="flex justify-between text-[13px] font-[600]">
+                <span className="text-[var(--color-ink-secondary)]">Expected CAGR:</span>
+                <span className="font-[600] text-[#10B981]">{expectedCagr}% / Year</span>
               </div>
+              <GlassRangeSlider
+                value={expectedCagr}
+                min={8}
+                max={18}
+                step={1}
+                trackHeight={6}
+                ariaLabel="Expected CAGR"
+                onChange={setExpectedCagr}
+              />
             </div>
           </div>
         </div>
 
-        {/* CRITICAL TEST ACTION BUTTONS */}
-        <div className="pt-4 border-t-4 border-ink space-y-4">
+        {/* Step 3, 4 & 5: Deliberate Action Confirmation & Terminal Stepper */}
+        <div className="pt-4 border-t border-[var(--color-paper-border)] space-y-4">
           {isDiverted ? (
-            <div className="bg-jade-tint border-2 border-ink p-4 font-mono text-center">
-              <p className="text-sm font-black text-jade uppercase">
-                ✓ This mandate is already terminated — {formatINR(subCost)}/m is now an active SIP.
+            <div className="p-6 rounded-none bg-[#10B981]/15 text-center space-y-3 font-mono-tactile">
+              <p className="text-[15px] font-[600] text-[#10B981]">
+                ✓ Mandate Terminated — {formatINR(subCost)}/m is now an active micro-SIP.
               </p>
               <button
                 type="button"
                 onClick={() => navigate('/goals')}
-                className="mt-3 bg-ink-dark text-brass font-mono font-black text-xs px-5 py-2.5 border-2 border-ink cursor-pointer uppercase focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
+                className="h-[42px] px-6 rounded-none bg-[#1A1A18] text-white dark:bg-[#F4F0E6] dark:text-[#1A1A18] text-[13px] font-[600] cursor-pointer"
               >
-                View My Goals Garden
+                View Goals Garden ↗
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Primary Action Button - MUST contain text matching 'Yes, cancel & invest ₹649/m' */}
+            <div className="space-y-4">
               <button
                 type="button"
-                onClick={handleConfirmCancel}
-                className="w-full bg-terra text-on-accent font-mono font-black text-base sm:text-lg py-5 px-4 border-4 border-ink shadow-[6px_6px_0px_0px_var(--color-shadow)] hover:bg-terra-deep hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-pointer uppercase flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+                onClick={handleStartReclaim}
+                disabled={isExecuting}
+                data-cursor-label="RECLAIM"
+                className="w-full h-[56px] rounded-none bg-[#1A1A18] text-white dark:bg-[#F4F0E6] dark:text-[#1A1A18] text-[16px] font-[600] hover:bg-black dark:hover:bg-white transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-xl disabled:opacity-50"
               >
-                <Zap className="w-6 h-6 fill-on-accent" aria-hidden="true" />
-                <span>Yes, cancel & invest {formatINR(subCost)}/m</span>
-              </button>
-
-              {/* Secondary Action Button - MUST contain text matching 'Give me 1 more month' */}
-              <button
-                type="button"
-                onClick={handleKeepSubscription}
-                className="w-full bg-surface text-ink font-mono font-black text-base sm:text-lg py-5 px-4 border-4 border-ink shadow-[6px_6px_0px_0px_var(--color-shadow)] hover:bg-muted hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-pointer uppercase flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
-              >
-                <span>Give me 1 more month</span>
+                <Sparkles className="w-5 h-5 text-[#10B981]" />
+                <span>{isExecuting ? 'Executing Reclaim Sequence...' : `Yes, Cancel Mandate & Invest ${formatINR(subCost)}/m`}</span>
               </button>
             </div>
           )}
 
-          <p className="text-center font-mono text-xs text-muted-text">
-            🔒 Clicking cancel triggers an automated UPI AutoPay e-mandate termination signal and provisions a {formatINR(subCost)}/m SIP into Nifty 50 Index Fund.
+          <p className="text-center text-[12px] text-[var(--color-ink-tertiary)] font-mono-tactile">
+            🔒 Triggers automated UPI AutoPay e-mandate revocation token and provisions {formatINR(subCost)}/m into Nifty 50 Index Fund.
           </p>
         </div>
+
       </div>
+
+      {/* Execution Stepper Terminal Overlay Modal */}
+      {isExecuting && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[var(--z-overlay)] flex items-center justify-center p-6">
+          <div className="bg-[#1A1A18] text-white rounded-none p-8 max-w-md w-full border border-white/10 shadow-2xl space-y-6 font-mono-tactile">
+            <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+              <Terminal className="w-5 h-5 text-[#10B981]" />
+              <h3 className="font-serif-editorial text-[20px] font-[600]">Reclaim Execution Handshake</h3>
+            </div>
+
+            <div className="space-y-3 text-[13px]">
+              <div className={`flex items-center gap-3 ${execStep >= 1 ? 'text-[#10B981]' : 'text-white/40'}`}>
+                <span>{execStep >= 1 ? '✓' : '○'}</span>
+                <span>[0.2s] Transmitting REVOKE token {revokeToken}...</span>
+              </div>
+
+              <div className={`flex items-center gap-3 ${execStep >= 2 ? 'text-[#10B981]' : 'text-white/40'}`}>
+                <span>{execStep >= 2 ? '✓' : '○'}</span>
+                <span>[0.8s] Handshaking HDFC E-Mandate Gateway...</span>
+              </div>
+
+              <div className={`flex items-center gap-3 ${execStep >= 3 ? 'text-[#10B981]' : 'text-white/40'}`}>
+                <span>{execStep >= 3 ? '✓' : '○'}</span>
+                <span>[1.4s] Provisioning Nifty 50 Micro-SIP (+{formatINR(subCost)}/mo)...</span>
+              </div>
+            </div>
+
+            <div className="w-full bg-white/10 h-1.5 rounded-none overflow-hidden">
+              <div
+                className="bg-[#10B981] h-full rounded-none transition-all duration-500"
+                style={{ width: `${(execStep / 3) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

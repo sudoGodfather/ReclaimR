@@ -1,0 +1,6 @@
+# ReclaimR Web Crawler Instructions
+User-agent: *
+Allow: /
+
+# Sitemap Location
+Sitemap: https://reclaimr.app/sitemap.xml

@@ -1,0 +1,20 @@
+{
+  "short_name": "ReclaimR",
+  "name": "ReclaimR — Wealth Protection & Micro-Diversion Agent",
+  "description": "Stop paying for forgotten subscriptions. Detect unused debit mandates on-device, execute 1-tap AutoPay cancellations, and divert wasted monthly money into Nifty 50 SIPs.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#F4F0E6",
+  "theme_color": "#1B4D3E",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "productivity", "utilities"],
+  "lang": "en-IN"
+}

@@ -1,177 +1,227 @@
-import React, { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import {
-  Shield, TrendingUp, Bell, PieChart, Info, Layers, Moon, Sun, Menu, X,
-} from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import React, { useState, useEffect } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { ArrowUpRight, Menu, X } from 'lucide-react';
+import { Magnetic } from './Magnetic';
+import { ThemeSwitcher } from './ThemeSwitcher';
+import { useTheme, type Theme } from '../useTheme';
 
 interface NavbarProps {
-  theme: 'light' | 'dark';
-  onToggleTheme: () => void;
+  theme?: Theme;
+  onToggleTheme?: () => void;
 }
 
-const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: Shield, activeClass: 'bg-brass text-ink-static' },
-  { to: '/subscriptions', label: 'Subscriptions', icon: Layers, activeClass: 'bg-brass text-ink-static' },
-  { to: '/goals', label: 'Goals Garden', icon: TrendingUp, activeClass: 'bg-jade text-ink-static' },
-  { to: '/alerts', label: 'Alerts', icon: Bell, activeClass: 'bg-terra text-on-accent' },
-  { to: '/reports', label: 'Reports', icon: PieChart, activeClass: 'bg-blue text-on-accent' },
-  { to: '/how-it-works', label: 'How It Works', icon: Info, activeClass: 'bg-blue text-on-accent' },
-];
-
-const linkBase =
-  'px-3 py-2 text-xs font-mono font-black uppercase border-2 border-ink flex items-center gap-1.5 transition-all';
-const linkIdle =
-  'bg-surface hover:bg-muted shadow-[2px_2px_0px_0px_var(--color-shadow)]';
-const linkActive =
-  'shadow-[3px_3px_0px_0px_var(--color-shadow)] -translate-x-px -translate-y-px';
-
-export const Navbar: React.FC<NavbarProps> = ({ theme, onToggleTheme }) => {
-  const { activeAlerts, totalRotMonthly, totalDivertedMonthly } = useApp();
+/**
+ * Navbar Component — "Two Hover" floating glass design
+ * - Big glass pill: wordmark + nav links (Overview → Audit Studio) + CTA
+ * - Small glass pill: liquid-glass 3-option theme switcher (light / dark / dim)
+ * - Pills stack vertically on <lg, sit side-by-side on lg+
+ * - Hide on scroll down, show on scroll up / when still
+ */
+export const Navbar: React.FC<NavbarProps> = ({ theme: externalTheme, onToggleTheme: externalToggle }) => {
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+  const { theme, setTheme } = useTheme();
+
+  const activeTheme = externalTheme ?? theme;
+
+  const handleSelectTheme = (next: Theme) => {
+    if (externalToggle) {
+      externalToggle();
+    } else {
+      setTheme(next);
+    }
+  };
+
+  const navLinks = [
+    { to: '/', label: 'Overview' },
+    { to: '/dashboard', label: 'Control Deck' },
+    { to: '/subscriptions', label: 'Stash Ledger' },
+    { to: '/goals', label: 'Goals Garden' },
+    { to: '/how-it-works', label: 'How It Works' },
+    { to: '/states', label: 'Audit Studio' },
+  ];
+
+  // Smart visibility: hidden only while actively scrolling down;
+  // always appears when still, scrolling up, or near the top.
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let stillTimer: number | null = null;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // Actively scrolling down past 140px → hide to maximize reading space
+      if (currentScrollY > 140 && currentScrollY > lastScrollY + 4) {
+        setIsHidden(true);
+      } else if (currentScrollY < lastScrollY - 4 || currentScrollY <= 80) {
+        // Scrolling up or near top → show
+        setIsHidden(false);
+      }
+
+      // User goes still → nav reappears after a short pause
+      if (stillTimer) window.clearTimeout(stillTimer);
+      stillTimer = window.setTimeout(() => {
+        setIsHidden(false);
+      }, 250);
+
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (stillTimer) window.clearTimeout(stillTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMobileOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 bg-bg border-b-4 border-ink shadow-[0_4px_0_0_var(--color-shadow)]">
-      {/* Ticker strip */}
-      <div className="bg-ink-dark text-brass font-mono text-xs py-1.5 px-4 overflow-hidden border-b-2 border-ink flex items-center justify-between font-bold tracking-wider">
-        <div className="flex items-center gap-3 animate-pulse">
-          <span className="bg-terra text-on-accent px-2 py-0.5 text-[10px] font-black uppercase tracking-widest border border-on-dark">
-            LIVE ROT AUDIT
-          </span>
-          <span>⚡ INDIA BLEEDS ₹4,500 CR/YR IN ZOMBIE SUBSCRIPTIONS</span>
-          <span className="hidden md:inline">| ROT PREVENTED TODAY: ₹1,48,500</span>
-        </div>
-        <div className="flex items-center gap-4 text-[11px] font-black uppercase">
-          <span className="text-jade">AUTONOMOUS DIVERTER: ACTIVE</span>
+    <header
+      className={`fixed top-0 left-0 right-0 z-[var(--z-header)] transition-transform duration-300 ease-out ${
+        isHidden ? '-translate-y-full' : 'translate-y-0'
+      }`}
+    >
+      {/* Liquid-glass RGB-split SVG filter — referenced by .liquid-nav via backdrop-filter: url(#glass-filter-_r_b_) */}
+      <svg
+        className="glass-surface__filter"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <defs>
+          <filter
+            id="glass-filter-_r_b_"
+            colorInterpolationFilters="sRGB"
+            x="-20%"
+            y="-20%"
+            width="140%"
+            height="140%"
+          >
+            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.05" numOctaves="2" seed="11" result="map" />
+            <feDisplacementMap in="SourceGraphic" in2="map" result="dispRed" scale="-20" xChannelSelector="R" yChannelSelector="G" />
+            <feColorMatrix in="dispRed" type="matrix" values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" result="red" />
+            <feDisplacementMap in="SourceGraphic" in2="map" result="dispGreen" scale="-24" xChannelSelector="R" yChannelSelector="G" />
+            <feColorMatrix in="dispGreen" type="matrix" values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0" result="green" />
+            <feDisplacementMap in="SourceGraphic" in2="map" result="dispBlue" scale="-28" xChannelSelector="R" yChannelSelector="G" />
+            <feColorMatrix in="dispBlue" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0" result="blue" />
+            <feBlend in="red" in2="green" mode="screen" result="rg" />
+            <feBlend in="rg" in2="blue" mode="screen" result="output" />
+            <feGaussianBlur in="output" stdDeviation="3" />
+          </filter>
+        </defs>
+      </svg>
+
+      <div className="flex flex-col lg:flex-row items-center justify-center gap-2 lg:gap-2.5 px-3 pt-2.5 lg:pt-3">
+        {/* Big glass pill: wordmark + nav links + CTA */}
+        <div className="liquid-nav rounded-none h-[52px] pl-4 pr-1.5 flex items-center gap-2.5 md:gap-3 lg:gap-5 border border-fg/10">
           <Link
-            to="/how-it-works"
-            className="hover:underline text-brass bg-ink-lift px-2 py-0.5 border border-ink-line"
+            to="/"
+            aria-label="ReclaimR Homepage"
+            className="flex items-center gap-2.5 group shrink-0"
           >
-            JUDGES DEMO MODE ↗
+            <span className="font-display italic text-[21px] sm:text-[22px] lg:text-[24px] font-[600] tracking-tight text-fg group-hover:text-[#44805A] transition-colors">
+              ReclaimR
+            </span>
           </Link>
-        </div>
-      </div>
 
-      {/* Main bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
-        {/* Brand */}
-        <Link to="/" className="flex items-center gap-3 text-left group">
-          <div className="w-11 h-11 bg-brass border-3 border-ink shadow-[3px_3px_0px_0px_var(--color-shadow)] flex items-center justify-center text-ink-static font-black text-2xl group-hover:translate-x-0.5 group-hover:translate-y-0.5 transition-transform">
-            ₹
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-black text-2xl tracking-tighter text-ink uppercase leading-none font-mono">
-                RECLAIM<span className="bg-terra text-on-accent px-1">R</span>
-              </span>
-              <span className="hidden sm:inline-block bg-blue text-on-accent text-[10px] font-mono font-bold px-1.5 py-0.5 border border-ink uppercase">
-                v3.0
-              </span>
-            </div>
-            <p className="text-[10px] font-bold text-muted-text font-mono tracking-tight uppercase">
-              Stop the Rot, Start the Growth
-            </p>
-          </div>
-        </Link>
+          {/* Editorial Nav Links */}
+          <div className="hidden md:flex items-center gap-2.5 lg:gap-5 font-sans-ui text-[13px] font-[500]">
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.to;
 
-        {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center flex-wrap gap-2 sm:gap-3" aria-label="Primary">
-          {navItems.map(({ to, label, icon: Icon, activeClass }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `${linkBase} ${isActive ? `${activeClass} ${linkActive}` : linkIdle}`
-              }
+              return (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={`transition-colors duration-150 ${
+                    isActive
+                      ? 'text-fg font-[600] border-b border-transparent pb-0.5 bg-[linear-gradient(90deg,#2E5B3F,#C24A2E)] bg-no-repeat bg-[length:100%_2px] bg-[position:0_100%]'
+                      : 'text-fg-2 hover:text-fg'
+                  }`}
+                >
+                  {link.label}
+                </NavLink>
+              );
+            })}
+          </div>
+
+          {/* Magnetic "Get early access" Button */}
+          <Magnetic>
+            <Link
+              to="/onboarding"
+              data-cursor-label="ACCESS"
+              aria-label="Get early access to ReclaimR"
+              className="btn-premium hidden sm:inline-flex items-center gap-1.5 h-[36px] px-3.5 lg:px-4 text-prominent-fg font-sans-ui font-[600] text-[13px] tracking-tight shadow-md shrink-0"
             >
-              <Icon className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>{label}</span>
-              {to === '/alerts' && activeAlerts.length > 0 && (
-                <span
-                  className="w-2 h-2 bg-terra rounded-full animate-ping border border-ink absolute -top-1 -right-1"
-                  aria-label={`${activeAlerts.length} unread alerts`}
-                />
-              )}
-            </NavLink>
-          ))}
-        </nav>
+              <span>Get early access</span>
+              <ArrowUpRight className="w-3.5 h-3.5 text-prominent-fg" />
+            </Link>
+          </Magnetic>
 
-        {/* Rot summary badge (desktop) */}
-        <div className="hidden lg:flex items-center gap-3 bg-surface border-2 border-ink p-1.5 shadow-[3px_3px_0px_0px_var(--color-shadow)]">
-          <div className="bg-crimson text-on-accent font-mono text-xs font-black px-2 py-1 flex items-center gap-1">
-            <span>ROT:</span>
-            <span>₹{totalRotMonthly.toLocaleString('en-IN')}/m</span>
-          </div>
-          <div className="bg-jade text-ink-static font-mono text-xs font-black px-2 py-1 flex items-center gap-1">
-            <span>DIVERTED:</span>
-            <span>₹{totalDivertedMonthly.toLocaleString('en-IN')}/m</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Theme toggle */}
+          {/* Mobile Drawer Trigger */}
           <button
             type="button"
-            onClick={onToggleTheme}
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="w-10 h-10 bg-surface text-ink border-2 border-ink shadow-[3px_3px_0px_0px_var(--color-shadow)] hover:bg-muted transition-colors flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
-          >
-            {theme === 'dark'
-              ? <Sun className="w-5 h-5" aria-hidden="true" />
-              : <Moon className="w-5 h-5" aria-hidden="true" />}
-          </button>
-
-          {/* Mobile hamburger */}
-          <button
-            type="button"
-            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden w-9 h-9 rounded-none bg-prominent/10 flex items-center justify-center text-fg cursor-pointer shrink-0"
             aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen((o) => !o)}
-            className="lg:hidden w-10 h-10 bg-ink-dark text-brass border-2 border-ink shadow-[3px_3px_0px_0px_var(--color-shadow)] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
+            aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
           >
-            {mobileOpen
-              ? <X className="w-5 h-5" aria-hidden="true" />
-              : <Menu className="w-5 h-5" aria-hidden="true" />}
+            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
+        </div>
+
+        {/* Small glass pill: liquid-glass theme switcher */}
+        <div className="liquid-nav rounded-none p-1 flex items-center justify-center border border-fg/10">
+          <ThemeSwitcher theme={activeTheme} onSelect={handleSelectTheme} />
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile Drawer Menu */}
       {mobileOpen && (
-        <nav
-          className="lg:hidden border-t-4 border-ink bg-surface px-4 py-3 space-y-2"
-          aria-label="Mobile navigation"
-        >
-          {navItems.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              onClick={() => setMobileOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-2 px-3 py-2 text-xs font-mono font-black uppercase border-2 border-ink ${
-                  isActive ? 'bg-brass text-ink-static' : 'bg-bg hover:bg-muted'
-                }`
-              }
-            >
-              <Icon className="w-4 h-4" aria-hidden="true" />
-              <span>{label}</span>
-              {to === '/alerts' && activeAlerts.length > 0 && (
-                <span className="ml-auto bg-terra text-on-accent px-1.5 py-0.5 text-[10px] font-black border border-ink">
-                  {activeAlerts.length}
-                </span>
-              )}
-            </NavLink>
-          ))}
-          <div className="flex gap-2 pt-2 border-t-2 border-ink">
-            <div className="flex-1 bg-crimson text-on-accent font-mono text-xs font-black px-2 py-1 text-center">
-              ROT: ₹{totalRotMonthly.toLocaleString('en-IN')}/m
+        <div className="md:hidden fixed top-[124px] left-4 right-4 z-50">
+          <div className="rounded-none liquid-nav border border-fg/14 p-6 space-y-4 font-sans-ui text-fg">
+            <div className="space-y-3">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setMobileOpen(false)}
+                  className="block text-[14px] font-[600] text-fg-2 hover:text-fg py-1"
+                >
+                  {link.label}
+                </Link>
+              ))}
             </div>
-            <div className="flex-1 bg-jade text-ink-static font-mono text-xs font-black px-2 py-1 text-center">
-              DIVERTED: ₹{totalDivertedMonthly.toLocaleString('en-IN')}/m
+
+            <div className="pt-4 border-t border-fg/14">
+              <Link
+                to="/onboarding"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center gap-2 w-full py-3 rounded-none bg-prominent text-prominent-fg font-[600] text-[13px] text-center shadow-lg transition-all duration-250 ease-[var(--ease-premium)] hover:-translate-y-[1px] hover:shadow-xl active:scale-[0.97]"
+              >
+                <span>Get early access</span>
+                <ArrowUpRight className="w-4 h-4 text-prominent-fg" />
+              </Link>
             </div>
           </div>
-        </nav>
+        </div>
       )}
     </header>
   );
 };
+
+export default Navbar;

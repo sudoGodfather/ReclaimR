@@ -1,0 +1,203 @@
+/**
+ * ReclaimR Design Token System
+ * Light-first token architecture: `:root` defines the LIGHT theme (pure white canvas,
+ * ink text) and the `.dark` class (toggled by useTheme) overrides with the DARK theme
+ * (pure black canvas, bone text). Accent colors are theme-independent and defined once.
+ *
+ * Colors: Ink #0C0E0B, Bone #F2EFE6, Moss #2E5B3F, Rust #C24A2E
+ */
+
+/* ================================================================= */
+/* LIGHT THEME (default) — pure white canvas, ink text               */
+/* ================================================================= */
+:root {
+  /* ----------------------------------------------------------------- */
+  /* 1. COLOR SYSTEM                                                   */
+  /* ----------------------------------------------------------------- */
+
+  /* Canvas & Surface Paper Tones */
+  --color-paper-bg: #FAF8F2;          /* Warm Off-White Canvas */
+  --color-paper-surface: #F5F3EE;     /* Light Parchment Surface */
+  --color-paper-card: #FFFFFF;        /* Elevated Card Surface */
+  --color-paper-muted: #EDEAE3;       /* Muted Surface Fill */
+  --color-paper-border: rgba(12, 14, 11, 0.12); /* 1px Hairline Border */
+  --color-paper-hover: #F0EDE7;       /* Paper Hover Fill */
+
+  /* Ink & Typography Tones */
+  --color-ink-primary: #0C0E0B;     /* Primary Ink Text */
+  --color-ink-secondary: #56524A;   /* Secondary Muted Ink */
+  --color-ink-tertiary: #8A867D;    /* Dim Caption */
+  --color-ink-static: #FFFFFF;
+
+  /* Inverse surface (primary button): dark fill + light text in light mode */
+  --color-prominent-surface: #0C0E0B;
+  --color-prominent-text: #F2EFE6;
+  --color-prominent-hover: #23261F;    /* Lifted ink — hover state for prominent surfaces */
+
+  /* Sovereign Accent Colors */
+  --color-forest-green: #2E5B3F;    /* Moss Green Financial Accent */
+  --color-forest-light: #44805A;    /* Bright Moss Highlight */
+  --color-forest-tint: rgba(46, 91, 63, 0.12); /* Soft Moss Glow Tint */
+
+  --color-sage-olive: #44805A;      /* Bright Moss / Olive Secondary */
+  --color-sage-dark: #2E5B3F;       /* Deep Moss */
+  --color-sage-tint: rgba(46, 91, 63, 0.10);
+
+  --color-crimson-rot: #C24A2E;     /* Terracotta Rust Decay */
+  --color-crimson-tint: rgba(194, 74, 46, 0.12); /* Soft Rust Tint */
+
+  --color-brass-gold: #B8860B;      /* Vintage Brass Gold */
+  --color-brass-tint: rgba(184, 134, 11, 0.12);
+
+  --color-shadow-base: rgba(12, 14, 11, 0.12);
+
+  /* ----------------------------------------------------------------- */
+  /* 2. TYPOGRAPHY SYSTEM                                              */
+  /* ----------------------------------------------------------------- */
+  --font-serif: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  --font-mono: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+
+  /* Typography Font Sizes & Fluid Scales */
+  --text-display-xl: clamp(48px, 9.5vw, 136px);
+  --text-display-lg: clamp(36px, 6.5vw, 92px);
+  --text-display-md: clamp(28px, 4.5vw, 56px);
+
+  --text-heading-xl: clamp(24px, 3.2vw, 40px);
+  --text-heading-lg: clamp(20px, 2.5vw, 32px);
+  --text-heading-md: clamp(16px, 2vw, 24px);
+
+  --text-body-lg: clamp(16px, 1.4vw, 20px);
+  --text-body-md: clamp(14px, 1.1vw, 16px);
+  --text-body-sm: clamp(12px, 0.9vw, 13px);
+
+  --text-financial: clamp(32px, 4.5vw, 64px);
+
+  /* ----------------------------------------------------------------- */
+  /* 3. SPACING SCALE                                                  */
+  /* ----------------------------------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* ----------------------------------------------------------------- */
+  /* 4. BORDER RADIUS SCALE                                            */
+  /* ----------------------------------------------------------------- */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-full: 0px;
+
+  /* ----------------------------------------------------------------- */
+  /* 5. SHADOW SYSTEM                                                  */
+  /* ----------------------------------------------------------------- */
+  --shadow-sm: 0 1px 3px rgba(12, 14, 11, 0.10);
+  --shadow-md: 0 4px 16px rgba(12, 14, 11, 0.14);
+  --shadow-lg: 0 8px 28px rgba(12, 14, 11, 0.18);
+  --shadow-xl: 0 16px 40px rgba(12, 14, 11, 0.22);
+  --shadow-banknote: 0 20px 40px -15px rgba(12, 14, 11, 0.25), inset 0 0 20px rgba(46, 91, 63, 0.10);
+
+  /* Premium ambient glows — moss (growth) & rust (decay) signal accents */
+  --shadow-glow-moss: 0 12px 36px -12px rgba(46, 91, 63, 0.55);
+  --shadow-glow-rust: 0 12px 36px -12px rgba(194, 74, 46, 0.5);
+
+  /* ----------------------------------------------------------------- */
+  /* 6. TRANSITIONS & TIMING                                           */
+  /* ----------------------------------------------------------------- */
+  --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 500ms;
+  --duration-reveal: 1000ms;
+
+  /* ----------------------------------------------------------------- */
+  /* 7. Z-INDEX LAYERS                                                 */
+  /* ----------------------------------------------------------------- */
+  --z-deep: -1;
+  --z-base: 0;
+  --z-lift: 10;
+  --z-dock: 40;
+  --z-header: 50;
+  --z-nav: 50;
+  --z-overlay: 90;
+  --z-toast: 100;
+
+  /* ----------------------------------------------------------------- */
+  /* 8. CONTAINER WIDTHS                                               */
+  /* ----------------------------------------------------------------- */
+  --width-narrow: 760px;
+  --width-medium: 880px;
+  --width-standard: 980px;
+  --width-wide: 1080px;
+  --width-hero: 1120px;
+}
+
+/* ================================================================= */
+/* DARK THEME — pure black canvas, bone text                         */
+/* ================================================================= */
+.dark {
+  --color-paper-bg: #000000;          /* Pure Black Canvas */
+  --color-paper-surface: #0A0B09;     /* Dark Parchment Surface */
+  --color-paper-card: #111210;        /* Elevated Dark Card Surface */
+  --color-paper-muted: #1A1C18;       /* Muted Surface Fill */
+  --color-paper-border: rgba(242, 239, 230, 0.14); /* 1px Hairline Border */
+  --color-paper-hover: #161814;       /* Paper Hover Fill */
+
+  --color-ink-primary: #F2EFE6;     /* Primary Bone Text */
+  --color-ink-secondary: #A3A096;   /* Secondary Muted Bone */
+  --color-ink-tertiary: #6E6B62;    /* Dim Slate Caption */
+  --color-ink-static: #000000;
+
+  /* Inverse surface (primary button): bone fill + ink text in dark mode */
+  --color-prominent-surface: #F2EFE6;
+  --color-prominent-text: #0C0E0B;
+  --color-prominent-hover: #FFFFFF;    /* Pure bone lift — hover state for prominent surfaces */
+
+  --color-shadow-base: rgba(0, 0, 0, 0.45);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --shadow-banknote: 0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(46, 91, 63, 0.15);
+}
+
+/* ================================================================= */
+/* DIM THEME — muted mossy dusk between light and dark               */
+/* ================================================================= */
+.dim {
+  --color-paper-bg: #131612;          /* Deep Mossy Dusk Canvas */
+  --color-paper-surface: #171B16;     /* Muted Dusk Surface */
+  --color-paper-card: #1C211A;        /* Elevated Dusk Card */
+  --color-paper-muted: #242A22;       /* Muted Fill */
+  --color-paper-border: rgba(216, 211, 193, 0.13); /* Hairline */
+  --color-paper-hover: #1B2019;       /* Dusk Hover Fill */
+
+  --color-ink-primary: #D8D3C4;     /* Primary Bone-Dusk Text */
+  --color-ink-secondary: #A29D8F;   /* Secondary Muted */
+  --color-ink-tertiary: #706C61;    /* Dim Caption */
+  --color-ink-static: #131612;
+
+  --color-prominent-surface: #D8D3C4;
+  --color-prominent-text: #131612;
+  --color-prominent-hover: #E8E3D4;
+
+  --color-shadow-base: rgba(0, 0, 0, 0.4);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.38);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.46);
+  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.54);
+  --shadow-banknote: 0 20px 40px -15px rgba(0, 0, 0, 0.55), inset 0 0 20px rgba(46, 91, 63, 0.16);
+}

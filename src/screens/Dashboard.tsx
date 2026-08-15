@@ -1,341 +1,302 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, TrendingUp, ArrowRight, CheckCircle2, Plus, AlertOctagon } from 'lucide-react';
+import { Flame, ShieldAlert, Sparkles, TrendingUp, CheckCircle2, ArrowRight, ArrowUpRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { SubIcon } from '../components/SubIcon';
-import { EmptyState } from '../components/ui';
-import { sipFutureValue, formatLakhs, formatINR } from '../utils/finance';
+import { sipFutureValue, formatINR, formatLakhs } from '../utils/finance';
+import { ScrollReveal, NumberCounter } from '../motion/ScrollPrimitives';
+import { ZombieSubscriptionCard } from '../components/ZombieSubscriptionCard';
+import { EditorialTrajectoryChart } from '../components/charts/EditorialTrajectoryChart';
+import { EditorialState } from '../components/ui/EditorialState';
+import { SEO } from '../components/SEO';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { subscriptions, goals, activeAlerts, totalRotMonthly, totalDivertedMonthly, totalSaved } = useApp();
+  const {
+    subscriptions,
+    goals,
+    activeAlerts,
+    totalRotMonthly,
+    totalDivertedMonthly,
+    totalSaved,
+    executeCancellation,
+  } = useApp();
 
-  const rotting = useMemo(
-    () => subscriptions.filter((s) => s.status === 'rotting'),
+  const rottingSubs = useMemo(
+    () => subscriptions.filter((s) => s.status === 'rotting' || s.decayScore > 60),
     [subscriptions],
   );
-  const diverted = useMemo(
+
+  const divertedSubs = useMemo(
     () => subscriptions.filter((s) => s.status === 'diverted'),
     [subscriptions],
   );
-  const primaryGoal = goals[0];
 
-  const tenYearLoss = sipFutureValue(totalRotMonthly, 10);
+  const tenYearCompound = sipFutureValue(totalDivertedMonthly > 0 ? totalDivertedMonthly : 1448, 10);
+  const primaryZombie = rottingSubs[0];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans">
-      {/* Top Banner & Quick Stat Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Total Sub-Rot Card */}
-        <div className="bg-terra text-on-accent border-4 border-ink p-6 shadow-[6px_6px_0px_0px_var(--color-shadow)] relative overflow-hidden space-y-2">
-          <div className="flex justify-between items-center font-mono text-xs uppercase font-black">
-            <span>ACTIVE SUB-ROT</span>
-            <span className="bg-ink-dark text-terra px-2 py-0.5 border border-on-dark">CRITICAL</span>
-          </div>
-          <div className="text-4xl font-mono font-black tracking-tight">
-            {formatINR(totalRotMonthly)}
-            <span className="text-sm font-normal">/mo</span>
-          </div>
-          <p className="font-mono text-xs text-on-accent/90 font-bold">
-            {rotting.length} subscriptions rotting right now
+    <div className="max-w-[1120px] mx-auto px-6 py-10 space-y-12 font-sans-clean text-[var(--color-ink-primary)]">
+      <SEO
+        title="Monetary Control Deck"
+        description="Monitor your total reclaimed wealth, monthly subscription leakage, rot scores, and active micro-SIP wealth diversion in your ReclaimR Monetary Control Deck."
+        canonicalPath="/dashboard"
+      />
+      
+      {/* ------------------------------------------------------------------ */}
+      {/* EDITORIAL WORKSPACE HEADER & MARGINAL METADATA                     */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[var(--color-paper-border)] pb-8">
+        <div className="space-y-2 max-w-2xl">
+          <p className="font-mono-tactile text-[11px] font-[600] tracking-[0.12em] uppercase text-[#1B4D3E] dark:text-[#2D6A4F]">
+            [ FINANCIAL CONTROL WORKSPACE • EDITION 2026 ]
           </p>
-          <div className="text-[11px] font-mono text-on-accent border-t border-on-accent/30 pt-2">
-            10-Yr Loss: {formatLakhs(tenYearLoss)}
-          </div>
+          <h1 className="font-serif-editorial text-[36px] md:text-[54px] font-[600] tracking-tight leading-[0.95]">
+            Monetary Control Deck
+          </h1>
+          <p className="body-lg text-[var(--color-ink-secondary)] pt-1">
+            Autonomous financial telemetry monitoring subscription decay, active e-mandates, and micro-SIP wealth diversion.
+          </p>
         </div>
 
-        {/* Wealth Diverted Card */}
-        <div className="bg-jade text-ink-static border-4 border-ink p-6 shadow-[6px_6px_0px_0px_var(--color-shadow)] space-y-2">
-          <div className="flex justify-between items-center font-mono text-xs uppercase font-black">
-            <span>SIP WEALTH DIVERTED</span>
-            <span className="bg-ink-dark text-jade px-2 py-0.5">GROWING</span>
-          </div>
-          <div className="text-4xl font-mono font-black tracking-tight">
-            {formatINR(totalDivertedMonthly)}
-            <span className="text-sm font-normal">/mo</span>
-          </div>
-          <p className="font-mono text-xs text-ink-static font-bold">
-            Redirected into Nifty 50 & Gold SIPs
-          </p>
-          <div className="text-[11px] font-mono text-ink-static/80 border-t border-ink-static/30 pt-2 font-bold">
-            Target: {primaryGoal ? primaryGoal.title : 'Your Goal'} (+{formatINR(totalDivertedMonthly)}/m)
-          </div>
-        </div>
-
-        {/* Total Recovered Cash */}
-        <div className="bg-brass text-ink-static border-4 border-ink p-6 shadow-[6px_6px_0px_0px_var(--color-shadow)] space-y-2">
-          <div className="flex justify-between items-center font-mono text-xs uppercase font-black">
-            <span>TOTAL RECOVERED TO DATE</span>
-            <span className="bg-ink-dark text-brass px-2 py-0.5">SAVED</span>
-          </div>
-          <div className="text-4xl font-mono font-black tracking-tight">
-            {formatINR(totalSaved)}
-          </div>
-          <p className="font-mono text-xs text-ink-static font-bold">
-            Prevented debit auto-claims in last 6 mos
-          </p>
-          <div className="text-[11px] font-mono text-ink-static/80 border-t border-ink-static/30 pt-2 font-bold">
-            {diverted.length} Zombie debits killed permanently
-          </div>
-        </div>
-
-        {/* Agent Persona Quick Bar */}
-        <div className="bg-surface border-4 border-ink p-6 shadow-[6px_6px_0px_0px_var(--color-shadow)] flex flex-col justify-between space-y-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 font-mono text-xs font-black text-terra uppercase">
-              <Zap className="w-4 h-4 fill-terra" />
-              <span>THE SAVAGE AUDITOR AGENT</span>
-            </div>
-            <p className="text-xs font-sans text-muted-text italic leading-snug">
-              "You watched 0 hours of Netflix this month but donated ₹649 to Reed Hastings. Should I execute the cancellation now?"
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate('/subscriptions/netflix-649')}
-            className="w-full bg-ink-dark text-brass font-mono font-black text-xs py-2 border-2 border-ink hover:bg-ink-lift cursor-pointer uppercase focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
-          >
-            Review Netflix Audit ↗
-          </button>
+        <div className="font-mono-tactile text-[11px] text-[var(--color-ink-tertiary)] uppercase tracking-wider space-y-1 text-left md:text-right border-l-2 md:border-l-0 md:border-r-2 border-[#1B4D3E] pl-4 md:pl-0 md:pr-4 shrink-0">
+          <span className="block font-[600] text-[#1B4D3E] dark:text-[#2D6A4F]">№ RC-2026-COCKPIT</span>
+          <span className="block">BOMBAY // 19.0760° N</span>
+          <span className="block">SECURITY: ON-DEVICE LOG PARSER</span>
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Col: Rotting Subscriptions needing Review */}
-        <div className="lg:col-span-8 space-y-6">
-          <div className="bg-surface border-4 border-ink p-6 shadow-[6px_6px_0px_0px_var(--color-shadow)] space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b-4 border-ink pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-terra text-on-accent font-mono font-black text-xs px-2 py-0.5 uppercase">
-                    ACTION REQUIRED
-                  </span>
-                  <h2 className="text-2xl font-mono font-black uppercase text-ink">
-                    High-Decay Subscriptions
-                  </h2>
-                </div>
-                <p className="text-xs font-mono text-muted-text">
-                  Unused subscriptions detected with over 60% decay score
-                </p>
-              </div>
+      {/* ------------------------------------------------------------------ */}
+      {/* HIERARCHY LEVEL 1: YOUR MONEY (VISUALLY DOMINANT MAJOR METRIC)     */}
+      {/* ------------------------------------------------------------------ */}
+      <ScrollReveal direction="up" className="p-8 md:p-10 rounded-none bg-[var(--color-paper-surface)] border border-[var(--color-paper-border)] shadow-[var(--shadow-md)] space-y-6 relative overflow-hidden">
+        <div className="flex items-center justify-between font-mono-tactile border-b border-[var(--color-paper-border)] pb-4">
+          <span className="eyebrow text-[#10B981] flex items-center gap-2 text-[12px]">
+            <Sparkles className="w-4 h-4" />
+            YOUR MONEY — TOTAL RECLAIMED WEALTH
+          </span>
+          <span className="text-[11px] font-[600] px-3 py-1 rounded-none bg-[#10B981]/15 text-[#10B981] uppercase">
+            ACTIVE PORTFOLIO
+          </span>
+        </div>
 
+        <div className="flex flex-col lg:flex-row lg:items-baseline justify-between gap-6">
+          <div className="space-y-1">
+            <span className="text-[11px] font-mono-tactile text-[var(--color-ink-tertiary)] uppercase tracking-wider block">CUMULATIVE RESCUED PRINCIPAL</span>
+            <div className="font-serif-editorial text-[52px] sm:text-[76px] font-[600] tracking-tight leading-none text-[var(--color-ink-primary)]">
+              <NumberCounter targetValue={totalSaved > 0 ? totalSaved : 52400} prefix="₹" size="xl" variant="ink" />
+            </div>
+            <p className="body-md text-[var(--color-ink-secondary)] pt-1">
+              Rescued from idle streaming rot & redirected into high-yield index funds.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-none bg-[#1A1A18] text-white font-mono-tactile space-y-1.5 shrink-0 border border-white/10 shadow-xl">
+            <span className="text-[10px] text-[#10B981] font-[600] uppercase tracking-widest block">10-YEAR COMPOUNDED POTENTIAL</span>
+            <div className="font-serif-editorial text-[36px] font-[600] text-[#10B981] leading-none">
+              {formatLakhs(tenYearCompound)}
+            </div>
+            <span className="text-[11px] text-white/50 block font-sans-clean">
+              Calculated at 12% projected CAGR index returns.
+            </span>
+          </div>
+        </div>
+      </ScrollReveal>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* HIERARCHY LEVEL 2: THIS MONTH (LEAKAGE, RECLAIM, OPPORTUNITY)       */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="space-y-3 font-mono-tactile">
+        <span className="eyebrow text-[var(--color-ink-secondary)] block">THIS MONTH — CASH-FLOW TELEMETRY</span>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* 1. Subscription Leakage */}
+          <div className="p-6 rounded-none bg-[var(--color-paper-card)] border border-[#C93B2B]/30 space-y-2">
+            <span className="text-[10px] font-[600] text-[#C93B2B] dark:text-[#E54D3C] uppercase tracking-widest block">SUBSCRIPTION LEAKAGE</span>
+            <div className="font-serif-editorial text-[32px] font-[600] text-[#C93B2B] dark:text-[#E54D3C] leading-none">
+              {formatINR(totalRotMonthly > 0 ? totalRotMonthly : 0)}
+              <span className="font-sans-clean text-[13px] font-[400] text-[var(--color-ink-secondary)]">/mo</span>
+            </div>
+            <p className="text-[11px] text-[var(--color-ink-tertiary)] pt-1">
+              {rottingSubs.length} Unused services currently rotting.
+            </p>
+          </div>
+
+          {/* 2. Potential Reclaim */}
+          <div className="p-6 rounded-none bg-[var(--color-paper-card)] border border-[#10B981]/30 space-y-2">
+            <span className="text-[10px] font-[600] text-[#10B981] uppercase tracking-widest block">POTENTIAL RECLAIM</span>
+            <div className="font-serif-editorial text-[32px] font-[600] text-[#10B981] leading-none">
+              +{formatINR(totalDivertedMonthly > 0 ? totalDivertedMonthly : 0)}
+              <span className="font-sans-clean text-[13px] font-[400] text-[var(--color-ink-secondary)]">/mo</span>
+            </div>
+            <p className="text-[11px] text-[var(--color-ink-tertiary)] pt-1">
+              Ready for 1-tap AutoPay e-mandate revocation.
+            </p>
+          </div>
+
+          {/* 3. Investment Opportunity */}
+          <div className="p-6 rounded-none bg-[#1A1A18] text-white border border-white/10 space-y-2 shadow-md">
+            <span className="text-[10px] font-[600] text-[#10B981] uppercase tracking-widest block">INVESTMENT OPPORTUNITY</span>
+            <div className="font-serif-editorial text-[22px] font-[600] text-white leading-tight">
+              Nifty 50 Index Fund
+            </div>
+            <p className="text-[11px] text-white/60 pt-1 font-sans-clean">
+              0% expense ratio direct equity allocation.
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* HIERARCHY LEVEL 3: DETAILED DATA & ASYMMETRICAL WORKSPACE STAGE    */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* Left Stage (7 Columns): Trajectory Chart & Priority Sub-Rot Review */}
+        <div className="lg:col-span-7 space-y-8">
+          
+          {/* Editorial Trajectory Data Visualization */}
+          <EditorialTrajectoryChart />
+
+          {/* Structured Rows Table: Priority Sub-Rot Review */}
+          <div className="space-y-4 font-mono-tactile">
+            <div className="flex items-center justify-between border-b border-[var(--color-paper-border)] pb-3">
+              <h2 className="font-serif-editorial text-[22px] font-[600] flex items-center gap-2 text-[var(--color-ink-primary)]">
+                <Flame className="w-5 h-5 text-[#C93B2B] fill-[#C93B2B]" />
+                <span>Priority Sub-Rot Review</span>
+              </h2>
+              
               <button
                 type="button"
                 onClick={() => navigate('/subscriptions')}
-                className="bg-ink-dark text-on-dark font-mono font-bold text-xs px-4 py-2 border-2 border-ink hover:bg-ink-lift cursor-pointer uppercase flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
+                className="text-[11px] font-[600] text-[#1B4D3E] dark:text-[#2D6A4F] uppercase tracking-wider cursor-pointer"
               >
-                <span>View All Stash</span>
-                <ArrowRight className="w-4 h-4" />
+                View Ledger ({subscriptions.length}) ↗
               </button>
             </div>
 
-            {/* List of Subscriptions with 'Review' button */}
-            <div className="space-y-4">
-              {rotting.length === 0 && (
-                <EmptyState
-                  title="NO ROT DETECTED"
-                  message="Your subscriptions are clean — nothing is bleeding. Add a goal to start diverting future savings."
-                  actionLabel="Go to Goals Garden"
-                  onAction={() => navigate('/goals')}
-                />
-              )}
-              {rotting.map((sub) => (
+            <div className="space-y-0 divide-y divide-[var(--color-paper-border)] border-t border-b border-[var(--color-paper-border)]">
+              {rottingSubs.length === 0 ? (
+                <div className="py-4">
+                  <EditorialState
+                    type="no-zombie-subscriptions"
+                    onPrimaryAction={() => navigate('/goals')}
+                    primaryActionLabel="Plant Wealth Goal"
+                  />
+                </div>
+              ) : (
+                rottingSubs.slice(0, 4).map((sub, idx) => (
                 <div
                   key={sub.id}
-                  className="border-3 border-ink p-4 bg-bg hover:bg-surface transition-all flex flex-wrap items-center justify-between gap-4 shadow-[3px_3px_0px_0px_var(--color-shadow)]"
+                  onClick={() => navigate(`/subscriptions/${sub.id}`)}
+                  data-cursor-label="INSPECT"
+                  className="py-4 px-3 hover:bg-[var(--color-paper-hover)] transition-all cursor-pointer flex items-center justify-between gap-4"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-terra text-on-accent border-2 border-ink font-mono font-black flex items-center justify-center text-xl shadow-[2px_2px_0px_0px_var(--color-shadow)]">
-                      <SubIcon name={sub.iconName} className="w-6 h-6" />
-                    </div>
+                    <span className="text-[12px] font-[600] text-[#1B4D3E] dark:text-[#2D6A4F]">
+                      0{idx + 1}
+                    </span>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-mono font-black text-lg text-ink uppercase">
+                        <h3 className="font-serif-editorial font-[600] text-[18px]">
                           {sub.name}
                         </h3>
-                        <span className="bg-crimson text-on-accent font-mono text-[10px] font-black px-1.5 py-0.5 uppercase border border-ink">
+                        <span className="px-2 py-0.5 rounded-none bg-[#C93B2B]/10 text-[#C93B2B] text-[9px] font-[600]">
                           {sub.decayScore}% ROT
                         </span>
                       </div>
-                      <p className="text-xs text-muted-text font-sans">
-                        {sub.description}
-                      </p>
-                      <p className="text-[11px] font-mono font-bold text-terra mt-0.5">
-                        Renews: {sub.renewDate} • Unused {sub.lastUsedDaysAgo} Days
+                      <p className="text-[11px] text-[var(--color-ink-tertiary)]">
+                        {sub.category} • Unused {sub.lastUsedDaysAgo} days
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 ml-auto">
-                    <div className="text-right font-mono">
-                      <div className="font-black text-xl text-ink">
-                        {formatINR(sub.cost)}/m
-                      </div>
-                      <div className="text-[10px] font-bold text-muted-text">
-                        10-Yr SIP: ₹{(sub.potential10YearGrowth / 100000).toFixed(2)}L
-                      </div>
+                  <div className="flex items-center gap-4 text-right">
+                    <div>
+                      <span className="font-serif-editorial font-[600] text-[18px] text-[#C93B2B]">
+                        {formatINR(sub.cost)}
+                      </span>
+                      <span className="block text-[9px] text-[var(--color-ink-tertiary)] uppercase">/mo</span>
                     </div>
 
-                    {/* Primary Navigation Test Target: Review Button */}
                     <button
                       type="button"
-                      onClick={() => navigate(`/subscriptions/${sub.id}`)}
-                      className="bg-brass text-ink-static font-mono font-black text-xs px-5 py-3 border-2 border-ink shadow-[3px_3px_0px_0px_var(--color-shadow)] hover:bg-brass-deep cursor-pointer uppercase flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        executeCancellation(sub.id);
+                      }}
+                      className="h-[34px] px-4 rounded-none bg-[#1A1A18] text-white dark:bg-[#F4F0E6] dark:text-[#1A1A18] text-[11px] font-[600] hover:bg-black transition-colors cursor-pointer"
                     >
-                      <span>Review</span>
-                      <ArrowRight className="w-4 h-4 stroke-[3]" />
+                      Kill Mandate
                     </button>
                   </div>
                 </div>
-              ))}
+              ))
+            )}
             </div>
           </div>
 
-          {/* Quick Diverted / Converted Subscriptions */}
-          <div className="bg-surface border-4 border-ink p-6 shadow-[6px_6px_0px_0px_var(--color-shadow)] space-y-4">
-            <h3 className="font-mono font-black text-lg uppercase text-ink flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-jade fill-ink-static" />
-              <span>Diverted Subscriptions (Active SIPs)</span>
-            </h3>
-
-            <div className="space-y-3">
-              {diverted.length === 0 && (
-                <EmptyState
-                  title="NO DIVERSIONS YET"
-                  message="Cancel your first rotting subscription and its cost is instantly converted into a Nifty 50 micro-SIP."
-                  actionLabel="Review Rotting Subscriptions"
-                  onAction={() => navigate('/subscriptions')}
-                />
-              )}
-              {diverted.map((sub) => (
-                <div key={sub.id} className="border-2 border-ink p-3 bg-jade-tint flex justify-between items-center font-mono text-xs">
-                  <div className="flex items-center gap-2">
-                    <SubIcon name={sub.iconName} className="w-4 h-4" />
-                    <span className="font-black text-ink">{sub.name}</span>
-                    <span className="text-muted-text ml-2 font-sans">→ Diverted into Nifty 50 Index SIP</span>
-                  </div>
-                  <div className="font-black text-jade bg-ink-dark px-2 py-1">
-                    +{formatINR(sub.cost)}/m RECOVERED
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
-        {/* Right Col: Goals Garden Preview + Alerts Sidebar */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* Goals Garden Widget */}
-          <div className="bg-surface border-4 border-ink p-6 shadow-[6px_6px_0px_0px_var(--color-shadow)] space-y-4">
-            <div className="flex justify-between items-center border-b-2 border-ink pb-3">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-jade" />
-                <h3 className="font-mono font-black text-lg uppercase text-ink">
-                  Goals Garden
-                </h3>
-              </div>
+        {/* Right Stage (5 Columns): Zombie Subscription Feature Card & Goals Feed */}
+        <div className="lg:col-span-5 space-y-8">
+          
+          {/* Distinctive Zombie Subscription Hero Card */}
+          {primaryZombie && (
+            <ZombieSubscriptionCard
+              subscription={primaryZombie}
+              onExecuteCancel={(id) => executeCancellation(id)}
+            />
+          )}
 
-              {/* Primary Navigation Test Target: New Goal Button */}
+          {/* Goals Garden Active Diversion Feed */}
+          <div className="space-y-4 font-mono-tactile">
+            <div className="flex items-center justify-between border-b border-[var(--color-paper-border)] pb-3">
+              <h2 className="font-serif-editorial text-[22px] font-[600] flex items-center gap-2 text-[var(--color-ink-primary)]">
+                <TrendingUp className="w-5 h-5 text-[#10B981]" />
+                <span>Goals Garden Feed</span>
+              </h2>
               <button
                 type="button"
                 onClick={() => navigate('/goals')}
-                className="bg-jade text-ink-static font-mono font-black text-xs px-3 py-1.5 border-2 border-ink hover:bg-jade-deep cursor-pointer uppercase flex items-center gap-1 shadow-[2px_2px_0px_0px_var(--color-shadow)] focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
+                className="text-[11px] font-[600] text-[#10B981] uppercase tracking-wider cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                <span>New Goal</span>
+                Garden ↗
               </button>
             </div>
 
-            <div className="space-y-4">
-              {goalList(goals, navigate)}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => navigate('/goals')}
-              className="w-full bg-ink-dark text-on-dark font-mono font-black text-xs py-2.5 border-2 border-ink hover:bg-ink-lift cursor-pointer uppercase focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
-            >
-              Manage Goals Garden ↗
-            </button>
-          </div>
-
-          {/* Quick Urgent Alerts Timeline Widget */}
-          <div className="bg-terra-tint border-4 border-ink p-6 shadow-[6px_6px_0px_0px_var(--color-shadow)] space-y-4">
-            <div className="flex justify-between items-center border-b-2 border-ink pb-2">
-              <h3 className="font-mono font-black text-base uppercase text-terra flex items-center gap-2">
-                <AlertOctagon className="w-5 h-5 fill-terra text-on-dark" />
-                <span>Urgent Rot Alerts</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => navigate('/alerts')}
-                className="text-xs font-mono font-black underline cursor-pointer text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
-              >
-                View Timeline
-              </button>
-            </div>
-
-            <div className="space-y-3 font-mono text-xs">
-              {activeAlerts.length === 0 && (
-                <div className="bg-surface border-2 border-ink p-3 text-center font-mono text-[11px] font-black uppercase text-jade">
-                  ✓ All Clear — No Unresolved Alerts
-                </div>
-              )}
-              {activeAlerts.slice(0, 2).map((alert) => (
-                <div key={alert.id} className="bg-surface border-2 border-ink p-3 space-y-1">
-                  <div className="font-black text-ink">{alert.title}</div>
-                  <p className="text-[11px] font-sans text-muted-text">{alert.message}</p>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/subscriptions/${alert.subscriptionId}`)}
-                    className="mt-2 text-[10px] font-black bg-terra text-on-accent px-2 py-1 border border-ink uppercase cursor-pointer inline-block focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+            <div className="space-y-3">
+              {goals.map((goal) => {
+                const percent = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
+                return (
+                  <div
+                    key={goal.id}
+                    onClick={() => navigate('/goals')}
+                    className="p-4 rounded-none bg-[var(--color-paper-surface)] border border-[var(--color-paper-border)] shadow-sm space-y-2.5 cursor-pointer hover:border-[#10B981]/40 transition-all font-mono-tactile"
                   >
-                    Cancel & Divert {formatINR(alert.amount)} ↗
-                  </button>
-                </div>
-              ))}
+                    <div className="flex justify-between items-center text-[12px]">
+                      <span className="font-[600] text-[var(--color-ink-primary)]">{goal.title}</span>
+                      <span className="text-[#10B981] font-[600]">{percent}% Achieved</span>
+                    </div>
+
+                    <div className="w-full bg-black/10 dark:bg-white/10 h-2 rounded-none overflow-hidden">
+                      <div className="bg-[#10B981] h-full rounded-none transition-all duration-500" style={{ width: `${percent}%` }} />
+                    </div>
+
+                    <div className="flex justify-between text-[11px] text-[var(--color-ink-tertiary)]">
+                      <span>Target: {formatINR(goal.targetAmount)}</span>
+                      <span className="text-[#10B981] font-[600]">+{formatINR(goal.monthlyContribution)}/mo SIP</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
+
         </div>
+
       </div>
     </div>
   );
 };
-
-/** Goal widget rows — extracted so they can be rendered with proper types. */
-function goalList(goals: ReturnType<typeof useApp>['goals'], navigate: ReturnType<typeof useNavigate>) {
-  return goals.map((goal) => {
-    const percent = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
-    return (
-      <button
-        type="button"
-        key={goal.id}
-        onClick={() => navigate('/goals')}
-        className="w-full text-left border-2 border-ink p-3 bg-bg hover:bg-surface cursor-pointer transition-all space-y-2 shadow-[2px_2px_0px_0px_var(--color-shadow)] focus:outline-none focus-visible:ring-2 focus-visible:ring-terra"
-      >
-        <div className="flex justify-between items-start font-mono">
-          <div>
-            <h4 className="font-black text-sm text-ink uppercase">{goal.title}</h4>
-            <p className="text-[10px] text-muted-text">Deadline: {goal.deadline}</p>
-          </div>
-          <span className="bg-ink-dark text-brass text-xs font-black px-1.5 py-0.5">
-            {percent}%
-          </span>
-        </div>
-
-        <div className="w-full bg-muted border-2 border-ink h-3 overflow-hidden">
-          <div
-            className="bg-jade h-full transition-all duration-1000 ease-out"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-
-        <div className="flex justify-between text-[11px] font-mono font-bold">
-          <span>{formatINR(goal.currentAmount)} saved</span>
-          <span className="text-terra">+{formatINR(goal.monthlyContribution)}/m SIP</span>
-        </div>
-      </button>
-    );
-  });
-}

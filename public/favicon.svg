@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B4D3E" />
+      <stop offset="100%" stop-color="#0D2820" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+  </defs>
+  <!-- Shield/Note Outer Contour -->
+  <rect x="32" y="32" width="448" height="448" rx="112" fill="url(#bgGrad)" stroke="#2D6A4F" stroke-width="8" />
+  
+  <!-- Outer Currency Border Frame -->
+  <rect x="64" y="64" width="384" height="384" rx="80" fill="none" stroke="#2D6A4F" stroke-width="3" stroke-dasharray="8 8" opacity="0.6" />
+  
+  <!-- Reclaim Shield Emblem -->
+  <path d="M256 128 L368 184 V280 C368 352 256 400 256 400 C256 400 144 352 144 280 V184 Z" fill="none" stroke="url(#accentGrad)" stroke-width="24" stroke-linejoin="round" stroke-linecap="round" />
+  
+  <!-- Reclaim Arrow inside Shield -->
+  <path d="M224 232 L272 232 L272 200 L320 256 L272 312 L272 280 L224 280 Z" fill="url(#accentGrad)" />
+</svg>

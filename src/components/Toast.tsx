@@ -36,22 +36,22 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {/* Toast viewport — non-blocking, above everything */}
       <div
         aria-live="polite"
-        className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 items-end"
+        className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2.5 items-end pointer-events-none"
       >
         {toasts.map((t) => (
           <div
             key={t.id}
             role="status"
-            className={`flex items-center gap-2 border-2 border-ink px-4 py-3 font-mono text-xs font-black uppercase shadow-[4px_4px_0px_0px_var(--color-shadow)] ${
+            className={`pointer-events-auto flex items-center gap-3 border px-4 py-3 rounded-none font-mono-tactile text-[12px] font-[600] uppercase tracking-wider shadow-[0_12px_36px_rgba(0,0,0,0.18)] ${
               t.variant === 'success'
-                ? 'bg-jade text-ink-static'
-                : 'bg-ink-dark text-brass'
+                ? 'bg-[#10B981] text-white border-emerald-400/30'
+                : 'bg-[#121316] text-[#38BDF8] border-white/10'
             }`}
           >
             {t.variant === 'success' ? (
-              <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-white" aria-hidden="true" />
             ) : (
-              <Info className="w-4 h-4" aria-hidden="true" />
+              <Info className="w-4 h-4 shrink-0 text-[#38BDF8]" aria-hidden="true" />
             )}
             <span>{t.message}</span>
           </div>

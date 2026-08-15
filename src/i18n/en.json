@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "manifesto": "Manifesto",
+    "theMethod": "The Method",
+    "calculator": "Calculator",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "earlyAccess": "Get early access"
+  },
+  "hero": {
+    "eyebrow": "A PERSONAL-FINANCE INTERVENTION",
+    "title": "ReclaimR",
+    "subtitle": "Stop the rot. Start the growth.",
+    "tagline": "On-device intelligence detecting hidden UPI AutoPay mandates and automatically compounding reclaimed cash into Nifty 50 SIPs.",
+    "scroll": "SCROLL TO DISCOVER"
+  },
+  "manifesto": {
+    "chapter": "CHAPTER 01 // THE INVISIBLE DRAIN",
+    "p1": "Every month, thousands of silent e-mandates execute across Indian bank accounts without warning. Forgotten streaming trials, unused gym memberships, neglected SaaS tools, and auto-renewing publications drain urban households of over ₹14,400 each year.",
+    "p2": "This is the invisible rot of financial decay — passive wealth erosion hidden behind automated UPI AutoPay notifications. You earned this capital through focus and discipline, yet it dissolves silently into corporate balance sheets.",
+    "p3": "ReclaimR exists to halt this entropy. Our on-device intelligence audits your debit mandates locally, exposes recurring zombie charges, revokes unneeded mandates with a single tap, and channels every reclaimed rupee directly into high-yielding Nifty 50 SIPs.",
+    "p4": "Stop paying for forgotten subscriptions. Reclaim your monetary sovereignty."
+  },
+  "method": {
+    "chapter": "CHAPTER 03 // THE METHODOLOGY",
+    "title": "The Method",
+    "step1Title": "DETECT",
+    "step1Sub": "On-Device Mandate Telemetry",
+    "step2Title": "CANCEL",
+    "step2Sub": "1-Tap AutoPay Revocation",
+    "step3Title": "GROW",
+    "step3Sub": "Automated Micro-SIP Diversion"
+  },
+  "calculator": {
+    "chapter": "CHAPTER 04 // EDITORIAL LEDGER SIMULATOR",
+    "title": "Calculate Your Bleed",
+    "subsLabel": "Unused Subscriptions",
+    "priceLabel": "Avg Price per Sub",
+    "monthlyBleed": "MONTHLY BLEED // LOSS",
+    "yearlyBleed": "ANNUAL ROT // LOSS",
+    "sipGrowth": "10-YR RECLAIMED WEALTH // GROWTH",
+    "cta": "Reclaim mine →"
+  },
+  "pricing": {
+    "chapter": "CHAPTER 05 // PRICING TIER MATRIX",
+    "title": "Transparent Sovereignty",
+    "planHeader": "PLAN",
+    "priceHeader": "PRICE",
+    "whatYouGetHeader": "WHAT YOU GET",
+    "actionHeader": "ACTION"
+  },
+  "fieldReports": {
+    "chapter": "CHAPTER 06 // USER TELEMETRY",
+    "title": "Field Reports"
+  },
+  "builder": {
+    "chapter": "CHAPTER 07 // THE BUILDER",
+    "title": "Why We Built ReclaimR",
+    "signatureTitle": "FOUNDER, RECLAIMR PROTOCOL"
+  },
+  "waitlist": {
+    "chapter": "CHAPTER 08 // EARLY ACCESS PROTOCOL",
+    "heading": "Get your free subscription audit",
+    "subheading": "Join urban professionals reclaiming their wealth from silent AutoPay mandates. Zero spam, complete local privacy.",
+    "placeholder": "Enter your email address...",
+    "successHeading": "You're #{{number}} in line",
+    "successSub": "We've sent your priority verification key to {{email}}. Watch your inbox for batch access."
+  },
+  "faq": {
+    "chapter": "CHAPTER 09 // FREQUENTLY ASKED QUESTIONS",
+    "title": "Clear Clarifications"
+  },
+  "footer": {
+    "backToTop": "Back to top",
+    "copyright": "© 2026 RECLAIMR · MADE IN INDIA",
+    "sovereignty": "ON-DEVICE MONETARY SOVEREIGNTY"
+  }
+}
