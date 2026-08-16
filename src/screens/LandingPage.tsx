@@ -18,7 +18,7 @@ const FaqSection = React.lazy(() => import('../components/FaqSection').then((m) 
 
 export const LandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-paper-grid-fade text-[var(--color-ink-primary)] font-sans-clean selection:bg-[#1B4D3E] selection:text-white relative landing-atmosphere">
+    <div className="min-h-screen text-[var(--color-ink-primary)] font-sans-clean selection:bg-[#1B4D3E] selection:text-white relative landing-atmosphere">
       <SEO
         title="ReclaimR — Stop the Rot. Start the Growth."
         description="ReclaimR detects unused debit mandates & forgotten subscriptions on-device, terminates them with 1 tap, and diverts wasted monthly cash into high-yield Nifty 50 SIPs. Zero cloud upload."

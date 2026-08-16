@@ -1,18 +1,47 @@
 import React from 'react';
 
-const RECLAIMED_SERVICES = [
-  'NETFLIX',
-  'AMAZON PRIME',
-  'SPOTIFY',
-  'CULT.FIT GYM',
-  'ADOBE CREATIVE CLOUD',
-  'MEDIUM',
-  'DISNEY+ HOTSTAR',
-  'YOUTUBE PREMIUM',
-  'NEW YORK TIMES',
-  'PLAYSTATION PLUS',
-  'XBOX GAME PASS',
+const RECLAIMED_SERVICES: { label: string; logo?: string }[] = [
+  { label: 'NETFLIX', logo: 'netflix' },
+  { label: 'AMAZON PRIME' },
+  { label: 'SPOTIFY', logo: 'spotify' },
+  { label: 'CULT.FIT GYM', logo: 'cultfit-emblem' },
+  { label: 'ADOBE CREATIVE CLOUD', logo: 'adobe' },
+  { label: 'MEDIUM', logo: 'medium' },
+  { label: 'DISNEY+ HOTSTAR' },
+  { label: 'YOUTUBE PREMIUM' },
+  { label: 'NEW YORK TIMES' },
+  { label: 'PLAYSTATION PLUS' },
+  { label: 'XBOX GAME PASS' },
 ];
+
+function BrandItem({ label, logo }: { label: string; logo?: string }) {
+  return (
+    <div className="font-mono-tactile text-[14px] sm:text-[16px] font-[600] tracking-[0.25em] uppercase text-fg opacity-40 hover:opacity-100 transition-opacity duration-300 cursor-pointer flex items-center gap-3">
+      {logo ? (
+        <span className="relative block h-9 w-9 sm:h-11 sm:w-11 shrink-0">
+          <img
+            src={`/logos/${logo}_dark.png`}
+            alt={label}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-contain dark:hidden"
+          />
+          <img
+            src={`/logos/${logo}_light.png`}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-contain hidden dark:block"
+          />
+        </span>
+      ) : (
+        <span className="w-1.5 h-1.5 rounded-none bg-[#C24A2E] shrink-0" />
+      )}
+      <span>{label}</span>
+    </div>
+  );
+}
 
 /**
  * ReclaimedServicesMarquee Component
@@ -36,14 +65,8 @@ export function ReclaimedServicesMarquee() {
       <div className="relative w-full overflow-hidden flex group [mask-image:linear-gradient(90deg,transparent_0%,#000_10%,#000_90%,transparent_100%)]">
         {/* Track 1 */}
         <div className="flex shrink-0 items-center gap-12 sm:gap-16 animate-marquee group-hover:[animation-play-state:paused] pr-12 sm:pr-16">
-          {RECLAIMED_SERVICES.map((name, i) => (
-            <div
-              key={i}
-              className="font-mono-tactile text-[14px] sm:text-[16px] font-[600] tracking-[0.25em] uppercase text-fg opacity-40 hover:opacity-100 transition-opacity duration-300 cursor-pointer flex items-center gap-3"
-            >
-              <span className="w-1.5 h-1.5 rounded-none bg-[#C24A2E]" />
-              <span>{name}</span>
-            </div>
+          {RECLAIMED_SERVICES.map((s, i) => (
+            <BrandItem key={i} {...s} />
           ))}
         </div>
 
@@ -52,14 +75,8 @@ export function ReclaimedServicesMarquee() {
           aria-hidden="true"
           className="flex shrink-0 items-center gap-12 sm:gap-16 animate-marquee group-hover:[animation-play-state:paused] pr-12 sm:pr-16"
         >
-          {RECLAIMED_SERVICES.map((name, i) => (
-            <div
-              key={`dup-${i}`}
-              className="font-mono-tactile text-[14px] sm:text-[16px] font-[600] tracking-[0.25em] uppercase text-fg opacity-40 hover:opacity-100 transition-opacity duration-300 cursor-pointer flex items-center gap-3"
-            >
-              <span className="w-1.5 h-1.5 rounded-none bg-[#C24A2E]" />
-              <span>{name}</span>
-            </div>
+          {RECLAIMED_SERVICES.map((s, i) => (
+            <BrandItem key={`dup-${i}`} {...s} />
           ))}
         </div>
       </div>

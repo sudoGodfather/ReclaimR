@@ -10,12 +10,34 @@ if (typeof window !== 'undefined') {
 }
 
 const MOCK_SUBS = [
-  { name: 'Netflix Premium', price: '₹649/mo', color: '#E50914', isZombie: false, subtext: 'Active • 2 days ago' },
-  { name: 'Cult.fit Elite Gym', price: '₹1,750/mo', color: '#C24A2E', isZombie: true, subtext: 'last used 64 days ago' },
-  { name: 'Spotify Family', price: '₹179/mo', color: '#1DB954', isZombie: false, subtext: 'Active • 1 day ago' },
-  { name: 'Adobe Creative Cloud', price: '₹2,000/mo', color: '#C24A2E', isZombie: true, subtext: 'last used 114 days ago' },
-  { name: 'Medium Publication', price: '₹199/mo', color: '#A3A096', isZombie: false, subtext: 'Active • 5 days ago' },
+  { name: 'Netflix Premium', price: '₹649/mo', logo: 'netflix', isZombie: false, subtext: 'Active • 2 days ago' },
+  { name: 'Cult.fit Elite Gym', price: '₹1,750/mo', logo: 'cultfit-emblem', isZombie: true, subtext: 'last used 64 days ago' },
+  { name: 'Spotify Family', price: '₹179/mo', logo: 'spotify', isZombie: false, subtext: 'Active • 1 day ago' },
+  { name: 'Adobe Creative Cloud', price: '₹2,000/mo', logo: 'adobe', isZombie: true, subtext: 'last used 114 days ago' },
+  { name: 'Medium Publication', price: '₹199/mo', logo: 'medium', isZombie: false, subtext: 'Active • 5 days ago' },
 ];
+
+function BrandLogo({ logo, name }: { logo: string; name: string }) {
+  return (
+    <span className="relative block w-9 h-9 sm:w-10 sm:h-10 shrink-0">
+      <img
+        src={`/logos/${logo}_dark.png`}
+        alt={name}
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 w-full h-full object-contain dark:hidden"
+      />
+      <img
+        src={`/logos/${logo}_light.png`}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 w-full h-full object-contain hidden dark:block"
+      />
+    </span>
+  );
+}
 
 /**
  * Card 01 Illustration: Mock list of 5 subscription rows.
@@ -40,10 +62,7 @@ function Card01Illustration() {
             }`}
           >
             <div className="flex items-center gap-3">
-              <span
-                className="w-3 h-3 rounded-none shrink-0 shadow-sm"
-                style={{ backgroundColor: sub.color }}
-              />
+              <BrandLogo logo={sub.logo} name={sub.name} />
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] font-[600] text-fg">{sub.name}</span>
@@ -177,10 +196,7 @@ function Card02Illustration() {
             }`}
           >
             <div className="flex items-center gap-3 relative">
-              <span
-                className="w-3 h-3 rounded-none shrink-0 shadow-sm"
-                style={{ backgroundColor: sub.color }}
-              />
+              <BrandLogo logo={sub.logo} name={sub.name} />
               <div className="relative">
                 <div className="flex items-center gap-2 relative">
                   <span className="text-[13px] font-[600] text-fg relative">

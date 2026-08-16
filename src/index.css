@@ -837,9 +837,9 @@ body.glitch-burst-active {
 
 /* ================================================================= */
 /* Chapter 02 — scroll-fill "bleeding money" headline                */
-/* Each word = ink base + rust overlay clipped to glyphs. GSAP       */
-/* animates overlay background-size 0%→100% as the 4 statements      */
-/* scroll, so the headline "bleeds" rust left→right.                 */
+/* Whole sentence = ink base + rust overlay clipped to glyphs.       */
+/* GSAP animates overlay background-size 0%→100% as the 4 statements */
+/* scroll, so the headline sentence "bleeds" rust left→right.        */
 /* ================================================================= */
 .fill-word {
   position: relative;

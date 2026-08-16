@@ -30,15 +30,15 @@ const PARAGRAPHS = [
   },
 ];
 
-const HEADLINE_WORDS = 'You are bleeding money in your sleep.'.split(' ');
+const HEADLINE = 'You are bleeding money in your sleep.';
 
 /**
  * StickyTwoColumnSection Component
  * Left column: sticky at top 20vh with giant Fraunces serif headline
  * "You are bleeding money in your sleep." + SVG rust draw-on underline (#C24A2E).
- * Headline words "bleed" rust left→right, scrubbed against the 4 statements:
- * fill starts as the right column enters and completes when the 4th
- * statement reaches the viewport center.
+ * Headline sentence "bleeds" rust left→right as a single unit, scrubbed against
+ * the 4 statements: fill starts as the right column enters and completes when
+ * the 4th statement reaches the viewport center.
  * Right column: 4 short paragraphs wrapped in <Reveal>, separated by hairline dividers.
  * Motion gated behind prefers-reduced-motion.
  */
@@ -51,17 +51,14 @@ export function StickyTwoColumnSection() {
     const path = pathRef.current;
     const section = sectionRef.current;
     const rightCol = rightColRef.current;
-    if (!path || !section || !rightCol) return;
+    const fillOver = section.querySelector<HTMLElement>('.fill-word-over');
+    if (!path || !section || !rightCol || !fillOver) return;
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const words = Array.from(section.querySelectorAll<HTMLElement>('.fill-word-over'));
-
     if (prefersReducedMotion) {
       path.style.strokeDashoffset = '0';
-      words.forEach((word) => {
-        word.style.backgroundSize = '100% 100%';
-      });
+      fillOver.style.backgroundSize = '100% 100%';
       return;
     }
 
@@ -90,17 +87,15 @@ export function StickyTwoColumnSection() {
         },
       });
 
-      words.forEach((word, i) => {
-        bleedTl.to(
-          word,
-          {
-            backgroundSize: '100% 100%',
-            duration: 1,
-            ease: 'none',
-          },
-          i * 0.12
-        );
-      });
+      bleedTl.to(
+        fillOver,
+        {
+          backgroundSize: '100% 100%',
+          duration: 1,
+          ease: 'none',
+        },
+        0
+      );
     }, section);
 
     return () => ctx.revert();
@@ -122,17 +117,12 @@ export function StickyTwoColumnSection() {
 
           <div className="relative">
             <h2 className="font-display font-[600] text-[clamp(32px,4vw,56px)] leading-[1.08] text-fg tracking-tight">
-              {HEADLINE_WORDS.map((word, i) => (
-                <React.Fragment key={i}>
-                  {i > 0 && ' '}
-                  <span className="fill-word">
-                    <span className="fill-word-base">{word}</span>
-                    <span className="fill-word-over" aria-hidden="true">
-                      {word}
-                    </span>
-                  </span>
-                </React.Fragment>
-              ))}
+              <span className="fill-word">
+                <span className="fill-word-base">{HEADLINE}</span>
+                <span className="fill-word-over" aria-hidden="true">
+                  {HEADLINE}
+                </span>
+              </span>
             </h2>
 
             {/* SVG Rust Draw-on Underline (#C24A2E) */}

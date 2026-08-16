@@ -51,13 +51,13 @@ export function FieldNotesSection() {
         <div className="flex items-center justify-between border-b border-fg/14 pb-6">
           <div>
             <span className="font-mono-tactile text-[11px] font-[600] uppercase tracking-[0.2em] text-[#2E5B3F]">
-              CHAPTER 07.5 // EDITORIAL DISPATCHES
+              CHAPTER 07 // EDITORIAL DISPATCHES
             </span>
             <h2 className="font-display font-[600] text-[clamp(32px,4.5vw,64px)] text-fg tracking-tight mt-1">
               Field Notes
             </h2>
           </div>
-          <div className="flex items-center gap-2 font-mono-tactile text-[11px] uppercase tracking-[0.15em] text-fg-2 hidden sm:flex">
+          <div className="flex items-center gap-2 font-mono-tactile text-[11px] uppercase tracking-[0.15em] text-fg hidden sm:flex">
             <BookOpen className="w-4 h-4 text-[#2E5B3F]" />
             <span>3 ESSAYS & RESEARCH DISPATCHES</span>
           </div>
@@ -77,7 +77,7 @@ export function FieldNotesSection() {
                   <img
                     src={note.image}
                     alt={note.title}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                    className="w-full h-full object-cover brightness-[1.12] saturate-[1.05] transition-transform duration-700 ease-out group-hover:scale-110"
                     loading="lazy"
                   />
                 </div>
@@ -87,7 +87,7 @@ export function FieldNotesSection() {
                   <span className="px-2.5 py-0.5 rounded-none bg-[#2E5B3F]/20 text-[#44805A] border border-[#2E5B3F]/40 font-[600]">
                     {note.tag}
                   </span>
-                  <span className="text-fg-2">{note.date}</span>
+                  <span className="text-fg">{note.date}</span>
                 </div>
 
                 {/* Title & Excerpt */}
@@ -95,7 +95,7 @@ export function FieldNotesSection() {
                   <h3 className="font-display font-[600] text-[20px] text-fg group-hover:text-[#44805A] transition-colors leading-snug">
                     {note.title}
                   </h3>
-                  <p className="font-sans-ui text-[14px] leading-relaxed text-fg-2 line-clamp-3">
+                  <p className="font-sans-ui text-[14px] leading-relaxed text-fg line-clamp-3">
                     {note.excerpt}
                   </p>
                 </div>
