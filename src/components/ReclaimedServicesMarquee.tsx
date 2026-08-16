@@ -2,14 +2,14 @@ import React from 'react';
 
 const RECLAIMED_SERVICES: { label: string; logo?: string }[] = [
   { label: 'NETFLIX', logo: 'netflix' },
-  { label: 'AMAZON PRIME' },
+  { label: 'AMAZON PRIME', logo: 'amazonprime' },
   { label: 'SPOTIFY', logo: 'spotify' },
   { label: 'CULT.FIT GYM', logo: 'cultfit-emblem' },
   { label: 'ADOBE CREATIVE CLOUD', logo: 'adobe' },
   { label: 'MEDIUM', logo: 'medium' },
-  { label: 'DISNEY+ HOTSTAR' },
-  { label: 'YOUTUBE PREMIUM' },
-  { label: 'NEW YORK TIMES' },
+  { label: 'DISNEY+ HOTSTAR', logo: 'disneyhotstar' },
+  { label: 'YOUTUBE PREMIUM', logo: 'youtube' },
+  { label: 'NEW YORK TIMES', logo: 'newyorktimes' },
   { label: 'PLAYSTATION PLUS' },
   { label: 'XBOX GAME PASS' },
 ];

@@ -6,7 +6,6 @@ import { MotionProvider } from './lib/motion';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { CustomCursor } from './components/CustomCursor';
-import { EditorialGridOverlay } from './components/EditorialGridOverlay';
 import { Preloader } from './components/Preloader';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { EasterEggRotListener } from './components/EasterEggRotListener';
@@ -89,7 +88,7 @@ export function App() {
       <AppProvider>
         <ToastProvider>
           <BrowserRouter>
-            <div className="min-h-screen bg-[var(--color-paper-bg)] text-[var(--color-ink-primary)] font-sans-clean flex flex-col selection:bg-[#1B4D3E] selection:text-white bg-paper-grid relative">
+            <div className="min-h-screen bg-[var(--color-paper-bg)] text-[var(--color-ink-primary)] font-sans-clean flex flex-col selection:bg-[#1B4D3E] selection:text-white relative">
               
               {/* Session-gated Editorial Preloader */}
               <Preloader />
@@ -137,9 +136,6 @@ export function App() {
               <Suspense fallback={null}>
                 <LedgerRainCanvas />
               </Suspense>
-
-              {/* Money In Check Big Checked Grid Overlay */}
-              <EditorialGridOverlay />
 
               <Navbar />
 

@@ -32,6 +32,17 @@ export function formatLakhs(amount: number, decimals = 2): string {
   return `₹${(amount / 100000).toFixed(decimals)} Lakhs`;
 }
 
+/** Compact INR for chart axes: ₹1.2k / ₹3.5L / ₹1Cr, with typographic minus for negatives. */
+export function formatINRCompact(amount: number): string {
+  const abs = Math.abs(amount);
+  const sign = amount < 0 ? '−' : '';
+  const trim = (v: number) => v.toFixed(1).replace(/\.0$/, '');
+  if (abs >= 10000000) return `${sign}₹${trim(abs / 10000000)}Cr`;
+  if (abs >= 100000) return `${sign}₹${trim(abs / 100000)}L`;
+  if (abs >= 1000) return `${sign}₹${trim(abs / 1000)}k`;
+  return `${sign}₹${Math.round(abs)}`;
+}
+
 const ORDINALS = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'];
 
 /** Ordinal suffix for a day-of-month, e.g. 14 → "14th", 21 → "21st". */

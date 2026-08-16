@@ -1,12 +1,35 @@
-import React, { useRef } from 'react';
-import { Flame, ArrowRight, ShieldAlert, TrendingDown } from 'lucide-react';
+import React, { useCallback, useRef, useState } from 'react';
+import { Flame, ArrowRight, ShieldAlert, TrendingDown, LocateFixed } from 'lucide-react';
 import { LEAK_SUBSCRIPTIONS, TOTAL_MONTHLY_LEAK, TOTAL_ANNUAL_LEAK, TEN_YEAR_LEAK_COMPOUND } from '../mock/leakData';
 import { ScrollReveal, TextReveal, NumberCounter } from '../motion/ScrollPrimitives';
 import { useNavigate } from 'react-router-dom';
 
+function formatCoord(value: number, pos: string, neg: string) {
+  const dir = value >= 0 ? pos : neg;
+  return `${Math.abs(value).toFixed(4)}° ${dir}`;
+}
+
 export const TheLeakSection: React.FC = () => {
   const sectionRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
+  const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
+  const [locStatus, setLocStatus] = useState<'idle' | 'locating' | 'denied' | 'unavailable'>('idle');
+
+  const locate = useCallback(() => {
+    if (!('geolocation' in navigator)) {
+      setLocStatus('unavailable');
+      return;
+    }
+    setLocStatus('locating');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        setLocStatus('idle');
+      },
+      () => setLocStatus('denied'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
 
   return (
     <section
@@ -37,8 +60,22 @@ export const TheLeakSection: React.FC = () => {
           {/* Right Marginal Coordinates */}
           <div className="font-mono-tactile text-[11px] text-[var(--color-ink-tertiary)] uppercase tracking-wider space-y-1 text-left md:text-right border-l-2 md:border-l-0 md:border-r-2 border-[#C93B2B] pl-4 md:pl-0 md:pr-4">
             <span className="block font-[600] text-[#C93B2B] dark:text-[#E54D3C]">AUDIT ID: #ROT-ACCUMULATOR</span>
-            <span className="block">LATITUDE: 19.0760° N</span>
-            <span className="block">STATUS: UNCHECKED DEBIT BLEED</span>
+            <span className="block tabular-nums">
+              LATITUDE: {coords ? formatCoord(coords.lat, 'N', 'S') : '— press locate —'}
+            </span>
+            <span className="block tabular-nums">
+              LONGITUDE: {coords ? formatCoord(coords.lon, 'E', 'W') : '—'}
+            </span>
+            <button
+              type="button"
+              onClick={locate}
+              disabled={locStatus === 'locating'}
+              className="inline-flex items-center gap-1.5 mt-1 font-[600] text-[#C93B2B] dark:text-[#E54D3C] hover:opacity-70 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+            >
+              <LocateFixed className={`w-3.5 h-3.5 ${locStatus === 'locating' ? 'animate-spin' : ''}`} />
+              {locStatus === 'locating' ? 'LOCATING…' : locStatus === 'denied' ? 'PERMISSION DENIED — RETRY' : locStatus === 'unavailable' ? 'GEOLOCATION UNAVAILABLE' : 'LOCATE MY DEVICE'}
+            </button>
+            <span className="block pt-1">STATUS: {coords ? 'DEVICE PINNED' : 'UNCHECKED DEBIT BLEED'}</span>
           </div>
         </div>
 
