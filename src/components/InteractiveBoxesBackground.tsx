@@ -74,6 +74,9 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
           neonStop2: '#023E8A', // Deep Blue
           neonStop3: '#7209B7', // Royal Purple
           neonStop4: '#D81159', // Vivid Pink
+          underglowCyan: 'rgba(0, 150, 199, 0.35)',
+          underglowPink: 'rgba(216, 17, 89, 0.35)',
+          underglowViolet: 'rgba(114, 9, 183, 0.2)',
         };
       }
 
@@ -96,6 +99,9 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
           neonStop2: '#38bdf8',
           neonStop3: '#a855f7',
           neonStop4: '#E06A45',
+          underglowCyan: 'rgba(0, 210, 255, 0.38)',
+          underglowPink: 'rgba(224, 106, 69, 0.38)',
+          underglowViolet: 'rgba(168, 85, 247, 0.2)',
         };
       }
 
@@ -117,6 +123,9 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         neonStop2: '#38bdf8', // Sky Blue
         neonStop3: '#a855f7', // Violet Purple
         neonStop4: '#ec4899', // Hot Pink/Magenta
+        underglowCyan: 'rgba(0, 210, 255, 0.45)',
+        underglowPink: 'rgba(236, 72, 153, 0.45)',
+        underglowViolet: 'rgba(168, 85, 247, 0.25)',
       };
     };
 
@@ -340,13 +349,24 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         const baseCy = b.baseY;
         const currentH = maxElevation * fold;
         const topCy = baseCy - currentH;
+        const glow = Math.min(Math.max(b.glow, 0), 1);
 
         ctx.save();
         ctx.globalAlpha = Math.min(fold * 1.4, 1);
 
+        // 1. Neon Underglow Halo beneath the unfolding cube
+        if (fold > 0.15) {
+          const underglow = ctx.createRadialGradient(cx, baseCy + 5, 2, cx, baseCy + 5, w * 1.15);
+          underglow.addColorStop(0, cx < width / 2 ? theme.underglowCyan : theme.underglowPink);
+          underglow.addColorStop(0.55, theme.underglowViolet);
+          underglow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = underglow;
+          ctx.fillRect(cx - w * 1.2, baseCy - quarterH, w * 2.4, h * 2.4);
+        }
+
         const neonGrad = getNeonGradient(ctx, cx - halfW, topCy, cx + halfW, topCy + quarterH, theme);
 
-        // 1. Left Face (Unfolds from ground base up to top diamond)
+        // 2. Left Face (Unfolds from ground base up to top diamond)
         ctx.beginPath();
         ctx.moveTo(cx - halfW, topCy);
         ctx.lineTo(cx, topCy + quarterH);
@@ -364,7 +384,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.lineWidth = 0.75;
         ctx.stroke();
 
-        // 2. Right Face (Unfolds from ground base up to top diamond)
+        // 3. Right Face (Unfolds from ground base up to top diamond)
         ctx.beginPath();
         ctx.moveTo(cx, topCy + quarterH);
         ctx.lineTo(cx + halfW, topCy);
@@ -382,16 +402,20 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.lineWidth = 0.75;
         ctx.stroke();
 
-        // 3. Glowing Neon Base Pedestal Edge (The signature under-rim glow)
+        // 4. Glowing Neon Base Pedestal Edge (The signature under-rim glow)
         ctx.beginPath();
         ctx.moveTo(cx - halfW, baseCy);
         ctx.lineTo(cx, baseCy + quarterH);
         ctx.lineTo(cx + halfW, baseCy);
         ctx.strokeStyle = neonGrad;
         ctx.lineWidth = 2.6 * Math.min(fold * 1.2, 1);
+        ctx.save();
+        ctx.shadowColor = cx < width / 2 ? theme.neonStop1 : theme.neonStop4;
+        ctx.shadowBlur = (12 + glow * 12) * fold;
         ctx.stroke();
+        ctx.restore();
 
-        // 4. Top Face (Diamond lid that pushes up as box unfolds)
+        // 5. Top Face (Diamond lid that pushes up as box unfolds)
         ctx.beginPath();
         ctx.moveTo(cx, topCy - quarterH);
         ctx.lineTo(cx + halfW, topCy);
@@ -409,10 +433,12 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.save();
         ctx.strokeStyle = theme.topFaceBevel;
         ctx.lineWidth = (theme.isLight ? 1.2 : 1.5) * fold;
+        ctx.shadowColor = theme.topFaceBevelGlow;
+        ctx.shadowBlur = 4 * glow;
         ctx.stroke();
         ctx.restore();
 
-        // 5. Front Center Vertical Crease / Spine
+        // 6. Front Center Vertical Crease / Spine
         ctx.beginPath();
         ctx.moveTo(cx, topCy + quarterH);
         ctx.lineTo(cx, baseCy + quarterH);
@@ -420,7 +446,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.lineWidth = 0.9 * fold;
         ctx.stroke();
 
-        // 6. Tech Corner Brackets when unfolding (matching the reference styling)
+        // 7. Tech Corner Brackets when unfolding (matching the reference styling)
         if (fold > 0.4) {
           const bSize = 6 * fold;
           ctx.strokeStyle = neonGrad;
