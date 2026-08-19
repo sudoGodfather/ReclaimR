@@ -4,6 +4,7 @@ interface InteractiveBoxesBackgroundProps {
   className?: string;
   maxElevation?: number;
   boxSize?: number;
+  gap?: number;
   interactiveRadius?: number;
 }
 
@@ -13,13 +14,13 @@ interface BoxNode {
   x: number;
   y: number;
   baseY: number;
-  scale: number;        // 0 (hidden) -> 1 (fully popped out)
+  scale: number;
   targetScale: number;
   scaleVelocity: number;
-  height: number;       // 0 -> maxElevation
+  height: number;
   targetHeight: number;
   heightVelocity: number;
-  glow: number;         // 0 -> 1
+  glow: number;
   targetGlow: number;
 }
 
@@ -27,6 +28,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
   className = '',
   maxElevation = 64,
   boxSize = 74,
+  gap = 20,
   interactiveRadius = 240,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -51,6 +53,79 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
     let height = 0;
     let dpr = 1;
 
+    // Theme color palettes
+    const getThemeConfig = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      const isDim = document.documentElement.classList.contains('dim');
+
+      if (!isDark && !isDim) {
+        // LIGHT THEME
+        return {
+          isLight: true,
+          crosshair: 'rgba(12, 14, 11, 0.16)',
+          topFaceGrad: ['#FFFFFF', '#E8EEF5'],
+          topFaceBevel: 'rgba(15, 23, 42, 0.45)',
+          topFaceBevelGlow: 'rgba(0, 180, 216, 0.25)',
+          leftFaceGrad: ['#DCE2E9', '#CAD3DE'],
+          leftFaceStroke: 'rgba(15, 23, 42, 0.15)',
+          rightFaceGrad: ['#C5CED9', '#B2BECB'],
+          rightFaceStroke: 'rgba(15, 23, 42, 0.18)',
+          ridgeColor: 'rgba(15, 23, 42, 0.25)',
+          neonStop1: '#0096C7', // Vivid Cyan
+          neonStop2: '#023E8A', // Deep Blue
+          neonStop3: '#7209B7', // Royal Purple
+          neonStop4: '#D81159', // Vivid Pink
+          underglowCyan: 'rgba(0, 150, 199, 0.28)',
+          underglowPink: 'rgba(216, 17, 89, 0.28)',
+          underglowViolet: 'rgba(114, 9, 183, 0.16)',
+        };
+      }
+
+      if (isDim) {
+        // DIM THEME
+        return {
+          isLight: false,
+          crosshair: 'rgba(224, 106, 69, 0.22)',
+          topFaceGrad: ['#22232B', '#14151C'],
+          topFaceBevel: 'rgba(255, 255, 255, 0.85)',
+          topFaceBevelGlow: 'rgba(224, 106, 69, 0.3)',
+          leftFaceGrad: ['#0A0A0F', '#121218'],
+          leftFaceStroke: 'rgba(255, 255, 255, 0.08)',
+          rightFaceGrad: ['#0E0E14', '#181822'],
+          rightFaceStroke: 'rgba(255, 255, 255, 0.1)',
+          ridgeColor: 'rgba(255, 255, 255, 0.35)',
+          neonStop1: '#00d2ff',
+          neonStop2: '#38bdf8',
+          neonStop3: '#a855f7',
+          neonStop4: '#E06A45', // Rust
+          underglowCyan: 'rgba(0, 210, 255, 0.32)',
+          underglowPink: 'rgba(224, 106, 69, 0.32)',
+          underglowViolet: 'rgba(168, 85, 247, 0.15)',
+        };
+      }
+
+      // DARK THEME
+      return {
+        isLight: false,
+        crosshair: 'rgba(56, 189, 248, 0.22)',
+        topFaceGrad: ['#1C1D28', '#0B0B10'],
+        topFaceBevel: 'rgba(255, 255, 255, 0.95)',
+        topFaceBevelGlow: 'rgba(255, 255, 255, 0.4)',
+        leftFaceGrad: ['#06060A', '#0E0E16'],
+        leftFaceStroke: 'rgba(255, 255, 255, 0.08)',
+        rightFaceGrad: ['#0A0A12', '#141420'],
+        rightFaceStroke: 'rgba(255, 255, 255, 0.1)',
+        ridgeColor: 'rgba(255, 255, 255, 0.35)',
+        neonStop1: '#00d2ff',
+        neonStop2: '#38bdf8',
+        neonStop3: '#a855f7',
+        neonStop4: '#ec4899',
+        underglowCyan: 'rgba(0, 210, 255, 0.35)',
+        underglowPink: 'rgba(236, 72, 153, 0.35)',
+        underglowViolet: 'rgba(168, 85, 247, 0.15)',
+      };
+    };
+
     const setupScene = () => {
       const container = containerRef.current || canvas.parentElement;
       if (!container) return;
@@ -65,9 +140,8 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
 
-      // Isometric step dimensions (Sparse density matching the Spline reference image)
-      const stepW = 118; // Wide column spacing
-      const stepH = 59;  // 2:1 isometric row spacing
+      const stepW = 118;
+      const stepH = 59;
 
       const originX = width / 2;
       const originY = height * 0.38;
@@ -77,7 +151,6 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
 
       const boxes: BoxNode[] = [];
 
-      // Generate isometric grid nodes
       for (let gy = -Math.floor(rows / 2) - 1; gy <= Math.floor(rows / 2) + 2; gy++) {
         for (let gx = -Math.floor(cols / 2) - 1; gx <= Math.floor(cols / 2) + 1; gx++) {
           const screenX = originX + (gx - gy) * (stepW / 2);
@@ -90,10 +163,10 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
               x: screenX,
               y: screenY,
               baseY: screenY,
-              scale: 0,        // ALL BOXES INITIALLY HIDDEN
+              scale: 0,
               targetScale: 0,
               scaleVelocity: 0,
-              height: 0,       // 0 ELEVATION
+              height: 0,
               targetHeight: 0,
               heightVelocity: 0,
               glow: 0,
@@ -103,7 +176,6 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         }
       }
 
-      // Sort back-to-front for proper 3D isometric layering
       boxes.sort((a, b) => {
         const depthA = a.gx + a.gy;
         const depthB = b.gx + b.gy;
@@ -115,31 +187,31 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
       drawStatic();
     };
 
-    // Neon gradient matching Electric Cyan -> Sky Blue -> Violet Purple -> Neon Magenta
     const getNeonGradient = (
       ctx: CanvasRenderingContext2D,
       x1: number,
       y1: number,
       x2: number,
-      y2: number
+      y2: number,
+      theme: ReturnType<typeof getThemeConfig>
     ) => {
       const grad = ctx.createLinearGradient(x1, y1, x2, y2);
-      grad.addColorStop(0, '#00d2ff');   // Electric Cyan
-      grad.addColorStop(0.35, '#38bdf8'); // Sky Blue
-      grad.addColorStop(0.7, '#a855f7');  // Violet Purple
-      grad.addColorStop(1, '#ec4899');   // Neon Magenta / Pink
+      grad.addColorStop(0, theme.neonStop1);
+      grad.addColorStop(0.35, theme.neonStop2);
+      grad.addColorStop(0.7, theme.neonStop3);
+      grad.addColorStop(1, theme.neonStop4);
       return grad;
     };
 
-    // Draw static rest frame (only clean sparse crosshairs)
     const drawStatic = () => {
       ctx.save();
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, width, height);
 
+      const theme = getThemeConfig();
       const boxes = boxesRef.current;
       ctx.lineWidth = 1;
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+      ctx.strokeStyle = theme.crosshair;
       ctx.beginPath();
       for (let i = 0; i < boxes.length; i++) {
         const b = boxes[i];
@@ -152,19 +224,19 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
       ctx.restore();
     };
 
-    // Render loop with dynamic pop-out physics
     const loop = () => {
       ctx.save();
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, width, height);
 
+      const theme = getThemeConfig();
       const mouse = mouseRef.current;
       const boxes = boxesRef.current;
       let hasActiveMotion = false;
 
-      // 1. Draw background crosshair markers
+      // 1. Draw crosshairs
       ctx.lineWidth = 1;
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+      ctx.strokeStyle = theme.crosshair;
       ctx.beginPath();
       for (let i = 0; i < boxes.length; i++) {
         const b = boxes[i];
@@ -189,12 +261,10 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
 
         if (mouse.active) {
           const dx = b.x - mouse.x;
-          // Offset baseY by 3D elevation center so the center of effect is centered right on the cursor
           const dy = (b.baseY - maxElevation * 0.42) - mouse.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < interactiveRadius) {
-            // Smooth cosine falloff
             const factor = Math.cos((dist / interactiveRadius) * (Math.PI / 2));
             const power = Math.pow(Math.max(0, factor), 1.5);
 
@@ -208,20 +278,17 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         b.targetHeight = tHeight;
         b.targetGlow = tGlow;
 
-        // Spring physics for scale
+        // Spring integration
         const scaleForce = (b.targetScale - b.scale) * spring;
         b.scaleVelocity = (b.scaleVelocity + scaleForce) * damping;
         b.scale += b.scaleVelocity;
 
-        // Spring physics for height
         const heightForce = (b.targetHeight - b.height) * spring;
         b.heightVelocity = (b.heightVelocity + heightForce) * damping;
         b.height += b.heightVelocity;
 
-        // Glow interpolation
         b.glow += (b.targetGlow - b.glow) * 0.2;
 
-        // Snap to zero when settled
         if (Math.abs(b.scaleVelocity) < 0.005 && Math.abs(b.targetScale - b.scale) < 0.005) {
           b.scale = b.targetScale;
           b.scaleVelocity = 0;
@@ -242,7 +309,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         const s = Math.max(0, b.scale);
         const curH = Math.max(0, b.height);
 
-        if (s < 0.02 || curH < 0.5) continue; // Skip un-popped boxes
+        if (s < 0.02 || curH < 0.5) continue;
 
         const cx = b.x;
         const cy = b.baseY - curH;
@@ -256,19 +323,19 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.save();
         ctx.globalAlpha = Math.min(s * 1.3, 1);
 
-        // A. Atmospheric Underglow
+        // Underglow
         if (s > 0.2) {
           const underglow = ctx.createRadialGradient(cx, baseCy + 5, 2, cx, baseCy + 5, w * 1.1);
-          underglow.addColorStop(0, cx < width / 2 ? 'rgba(0, 210, 255, 0.35)' : 'rgba(236, 72, 153, 0.35)');
-          underglow.addColorStop(0.6, 'rgba(168, 85, 247, 0.15)');
+          underglow.addColorStop(0, cx < width / 2 ? theme.underglowCyan : theme.underglowPink);
+          underglow.addColorStop(0.6, theme.underglowViolet);
           underglow.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = underglow;
           ctx.fillRect(cx - w * 1.2, baseCy - quarterH, w * 2.4, h * 2.4);
         }
 
-        const neonGrad = getNeonGradient(ctx, cx - halfW, cy, cx + halfW, cy + quarterH);
+        const neonGrad = getNeonGradient(ctx, cx - halfW, cy, cx + halfW, cy + quarterH, theme);
 
-        // B. Left Face
+        // A. Left Face
         ctx.beginPath();
         ctx.moveTo(cx - halfW, cy);
         ctx.lineTo(cx, cy + quarterH);
@@ -277,16 +344,16 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.closePath();
 
         const leftGrad = ctx.createLinearGradient(cx - halfW, cy, cx, cy + quarterH);
-        leftGrad.addColorStop(0, '#06060a');
-        leftGrad.addColorStop(1, '#0e0e16');
+        leftGrad.addColorStop(0, theme.leftFaceGrad[0]);
+        leftGrad.addColorStop(1, theme.leftFaceGrad[1]);
         ctx.fillStyle = leftGrad;
         ctx.fill();
 
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.strokeStyle = theme.leftFaceStroke;
         ctx.lineWidth = 0.75;
         ctx.stroke();
 
-        // C. Right Face
+        // B. Right Face
         ctx.beginPath();
         ctx.moveTo(cx, cy + quarterH);
         ctx.lineTo(cx + halfW, cy);
@@ -295,16 +362,16 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.closePath();
 
         const rightGrad = ctx.createLinearGradient(cx, cy + quarterH, cx + halfW, cy);
-        rightGrad.addColorStop(0, '#0a0a12');
-        rightGrad.addColorStop(1, '#141420');
+        rightGrad.addColorStop(0, theme.rightFaceGrad[0]);
+        rightGrad.addColorStop(1, theme.rightFaceGrad[1]);
         ctx.fillStyle = rightGrad;
         ctx.fill();
 
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.strokeStyle = theme.rightFaceStroke;
         ctx.lineWidth = 0.75;
         ctx.stroke();
 
-        // D. Glowing Neon Base Pedestal Rim (Electric Cyan -> Magenta)
+        // C. Glowing Base Pedestal Rim
         ctx.beginPath();
         ctx.moveTo(cx - halfW, baseCy);
         ctx.lineTo(cx, baseCy + quarterH);
@@ -312,12 +379,12 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.strokeStyle = neonGrad;
         ctx.lineWidth = 2.4 * s;
         ctx.save();
-        ctx.shadowColor = cx < width / 2 ? '#00d2ff' : '#ec4899';
+        ctx.shadowColor = cx < width / 2 ? theme.neonStop1 : theme.neonStop4;
         ctx.shadowBlur = (10 + glow * 10) * s;
         ctx.stroke();
         ctx.restore();
 
-        // E. Top Face (Diamond)
+        // D. Top Face (Diamond)
         ctx.beginPath();
         ctx.moveTo(cx, cy - quarterH);
         ctx.lineTo(cx + halfW, cy);
@@ -326,16 +393,16 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.closePath();
 
         const topGrad = ctx.createLinearGradient(cx - halfW, cy - quarterH, cx + halfW, cy + quarterH);
-        topGrad.addColorStop(0, '#1c1d28');
-        topGrad.addColorStop(1, '#0b0b10');
+        topGrad.addColorStop(0, theme.topFaceGrad[0]);
+        topGrad.addColorStop(1, theme.topFaceGrad[1]);
         ctx.fillStyle = topGrad;
         ctx.fill();
 
-        // Top Face Bevel Edge: Crisp white/silver rim with neon touch
+        // Top Face Bevel Edge
         ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.lineWidth = 1.4 * s;
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+        ctx.strokeStyle = theme.topFaceBevel;
+        ctx.lineWidth = (theme.isLight ? 1.1 : 1.4) * s;
+        ctx.shadowColor = theme.topFaceBevelGlow;
         ctx.shadowBlur = 4 * glow;
         ctx.stroke();
         ctx.restore();
@@ -344,7 +411,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.beginPath();
         ctx.moveTo(cx, cy + quarterH);
         ctx.lineTo(cx, baseCy + quarterH);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.strokeStyle = theme.ridgeColor;
         ctx.lineWidth = 0.9 * s;
         ctx.stroke();
 
@@ -404,8 +471,16 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
 
     window.addEventListener('mousemove', handleGlobalPointerMove, { passive: true });
 
+    // Watch for theme class changes on <html>
+    const observer = new MutationObserver(() => {
+      drawStatic();
+      startLoop();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
     return () => {
       cancelAnimationFrame(animFrameIdRef.current);
+      observer.disconnect();
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleGlobalPointerMove);
     };
@@ -424,7 +499,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
     <div
       ref={containerRef}
       onPointerLeave={handlePointerLeave}
-      className={`relative w-full h-full overflow-hidden select-none pointer-events-auto bg-[#000000] ${className}`}
+      className={`relative w-full h-full overflow-hidden select-none pointer-events-auto ${className}`}
       style={{ touchAction: 'none' }}
     >
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
