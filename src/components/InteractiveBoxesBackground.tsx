@@ -352,17 +352,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         const glow = Math.min(Math.max(b.glow, 0), 1);
 
         ctx.save();
-        ctx.globalAlpha = Math.min(fold * 1.4, 1);
-
-        // 1. Neon Underglow Halo beneath the unfolding cube
-        if (fold > 0.15) {
-          const underglow = ctx.createRadialGradient(cx, baseCy + 5, 2, cx, baseCy + 5, w * 1.15);
-          underglow.addColorStop(0, cx < width / 2 ? theme.underglowCyan : theme.underglowPink);
-          underglow.addColorStop(0.55, theme.underglowViolet);
-          underglow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-          ctx.fillStyle = underglow;
-          ctx.fillRect(cx - w * 1.2, baseCy - quarterH, w * 2.4, h * 2.4);
-        }
+        // Radial halo removed as requested - keeping crisp base plates and neon pedestal rims
 
         const neonGrad = getNeonGradient(ctx, cx - halfW, topCy, cx + halfW, topCy + quarterH, theme);
 
@@ -408,12 +398,8 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.lineTo(cx, baseCy + quarterH);
         ctx.lineTo(cx + halfW, baseCy);
         ctx.strokeStyle = neonGrad;
-        ctx.lineWidth = 2.6 * Math.min(fold * 1.2, 1);
-        ctx.save();
-        ctx.shadowColor = cx < width / 2 ? theme.neonStop1 : theme.neonStop4;
-        ctx.shadowBlur = (12 + glow * 12) * fold;
+        ctx.lineWidth = 2.4 * Math.min(fold * 1.2, 1);
         ctx.stroke();
-        ctx.restore();
 
         // 5. Top Face (Diamond lid that pushes up as box unfolds)
         ctx.beginPath();
