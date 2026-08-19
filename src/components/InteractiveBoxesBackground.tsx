@@ -17,8 +17,6 @@ interface BoxNode {
   foldProgress: number; // 0.0 (flat folded on ground) -> 1.0 (fully unfolded 3D cube)
   targetFold: number;
   foldVelocity: number;
-  glow: number;
-  targetGlow: number;
 }
 
 export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProps> = ({
@@ -26,15 +24,14 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
   maxElevation = 68,
   boxSize = 76,
   gap = 20,
-  interactiveRadius = 250,
+  interactiveRadius = 230,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mouseRef = useRef<{ x: number; y: number; active: boolean; lastMove: number }>({
+  const mouseRef = useRef<{ x: number; y: number; active: boolean }>({
     x: -99999,
     y: -99999,
     active: false,
-    lastMove: 0,
   });
   const boxesRef = useRef<BoxNode[]>([]);
   const animFrameIdRef = useRef<number>(0);
@@ -50,82 +47,70 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
     let height = 0;
     let dpr = 1;
 
-    // Theme configuration
+    // Theme configuration with 100% SOLID opaque face fills
     const getThemeConfig = () => {
       const isDark = document.documentElement.classList.contains('dark');
       const isDim = document.documentElement.classList.contains('dim');
 
       if (!isDark && !isDim) {
-        // LIGHT THEME
+        // LIGHT THEME (100% Solid Opaque Alabaster & Silver)
         return {
           isLight: true,
           crosshair: 'rgba(12, 14, 11, 0.16)',
-          basePlateFill: 'rgba(235, 240, 246, 0.6)',
+          basePlateFill: '#F1F4F8',
           basePlateStroke: 'rgba(15, 23, 42, 0.14)',
-          topFaceGrad: ['#FFFFFF', '#E6EDF5'],
-          topFaceBevel: 'rgba(15, 23, 42, 0.55)',
-          topFaceBevelGlow: 'rgba(0, 180, 216, 0.3)',
+          topFaceGrad: ['#FFFFFF', '#E8EEF5'],
+          topFaceBevel: 'rgba(15, 23, 42, 0.65)',
           leftFaceGrad: ['#DCE2E9', '#CAD3DE'],
-          leftFaceStroke: 'rgba(15, 23, 42, 0.15)',
+          leftFaceStroke: 'rgba(15, 23, 42, 0.2)',
           rightFaceGrad: ['#C5CED9', '#B2BECB'],
-          rightFaceStroke: 'rgba(15, 23, 42, 0.18)',
-          ridgeColor: 'rgba(15, 23, 42, 0.3)',
+          rightFaceStroke: 'rgba(15, 23, 42, 0.22)',
+          ridgeColor: 'rgba(15, 23, 42, 0.35)',
           neonStop1: '#0096C7', // Vivid Cyan
           neonStop2: '#023E8A', // Deep Blue
           neonStop3: '#7209B7', // Royal Purple
           neonStop4: '#D81159', // Vivid Pink
-          underglowCyan: 'rgba(0, 150, 199, 0.35)',
-          underglowPink: 'rgba(216, 17, 89, 0.35)',
-          underglowViolet: 'rgba(114, 9, 183, 0.2)',
         };
       }
 
       if (isDim) {
-        // DIM THEME
+        // DIM THEME (100% Solid Opaque Charcoal)
         return {
           isLight: false,
           crosshair: 'rgba(224, 106, 69, 0.22)',
-          basePlateFill: 'rgba(18, 19, 25, 0.6)',
+          basePlateFill: '#14151C',
           basePlateStroke: 'rgba(255, 255, 255, 0.08)',
-          topFaceGrad: ['#22232B', '#14151C'],
-          topFaceBevel: 'rgba(255, 255, 255, 0.85)',
-          topFaceBevelGlow: 'rgba(224, 106, 69, 0.35)',
+          topFaceGrad: ['#252632', '#181922'],
+          topFaceBevel: 'rgba(255, 255, 255, 0.9)',
           leftFaceGrad: ['#0A0A0F', '#121218'],
-          leftFaceStroke: 'rgba(255, 255, 255, 0.08)',
+          leftFaceStroke: 'rgba(255, 255, 255, 0.1)',
           rightFaceGrad: ['#0E0E14', '#181822'],
-          rightFaceStroke: 'rgba(255, 255, 255, 0.1)',
+          rightFaceStroke: 'rgba(255, 255, 255, 0.12)',
           ridgeColor: 'rgba(255, 255, 255, 0.35)',
           neonStop1: '#00d2ff',
           neonStop2: '#38bdf8',
           neonStop3: '#a855f7',
           neonStop4: '#E06A45',
-          underglowCyan: 'rgba(0, 210, 255, 0.38)',
-          underglowPink: 'rgba(224, 106, 69, 0.38)',
-          underglowViolet: 'rgba(168, 85, 247, 0.2)',
         };
       }
 
-      // DARK THEME (Matching Spline Reference)
+      // DARK THEME (100% Solid Opaque Obsidian & Silver Bevels)
       return {
         isLight: false,
         crosshair: 'rgba(56, 189, 248, 0.24)',
-        basePlateFill: 'rgba(10, 11, 16, 0.75)',
+        basePlateFill: '#0A0B10',
         basePlateStroke: 'rgba(255, 255, 255, 0.09)',
-        topFaceGrad: ['#1E1F2A', '#0D0E14'],
+        topFaceGrad: ['#222432', '#12131A'],
         topFaceBevel: 'rgba(255, 255, 255, 0.98)',
-        topFaceBevelGlow: 'rgba(255, 255, 255, 0.45)',
         leftFaceGrad: ['#06060A', '#0E0E16'],
-        leftFaceStroke: 'rgba(255, 255, 255, 0.1)',
+        leftFaceStroke: 'rgba(255, 255, 255, 0.12)',
         rightFaceGrad: ['#0A0A12', '#141420'],
-        rightFaceStroke: 'rgba(255, 255, 255, 0.12)',
-        ridgeColor: 'rgba(255, 255, 255, 0.4)',
+        rightFaceStroke: 'rgba(255, 255, 255, 0.15)',
+        ridgeColor: 'rgba(255, 255, 255, 0.45)',
         neonStop1: '#00d2ff', // Electric Cyan
         neonStop2: '#38bdf8', // Sky Blue
         neonStop3: '#a855f7', // Violet Purple
         neonStop4: '#ec4899', // Hot Pink/Magenta
-        underglowCyan: 'rgba(0, 210, 255, 0.45)',
-        underglowPink: 'rgba(236, 72, 153, 0.45)',
-        underglowViolet: 'rgba(168, 85, 247, 0.25)',
       };
     };
 
@@ -143,7 +128,6 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
 
-      // Step dimensions (matching the clean density in the reference)
       const stepW = 120;
       const stepH = 60;
 
@@ -167,17 +151,15 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
               x: screenX,
               y: screenY,
               baseY: screenY,
-              foldProgress: 0, // Starts flat on base plate
+              foldProgress: 0,
               targetFold: 0,
               foldVelocity: 0,
-              glow: 0,
-              targetGlow: 0,
             });
           }
         }
       }
 
-      // Sort back-to-front for proper 3D isometric layering
+      // Sort strictly back-to-front so solid 3D cubes occlude elements behind them cleanly
       boxes.sort((a, b) => {
         const depthA = a.gx + a.gy;
         const depthB = b.gx + b.gy;
@@ -205,7 +187,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
       return grad;
     };
 
-    // Draw base ground layer (Base colour plates + neon perimeter rims + crosshairs)
+    // Draw base ground layer
     const drawBaseLayer = (
       theme: ReturnType<typeof getThemeConfig>,
       boxes: BoxNode[]
@@ -215,13 +197,12 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
       const halfW = w / 2;
       const quarterH = h / 2;
 
-      // 1. Draw subtle base diamond plates & crosshairs across all grid cells
       for (let i = 0; i < boxes.length; i++) {
         const b = boxes[i];
         const cx = b.x;
         const cy = b.baseY;
 
-        // Ground Diamond Base Plate
+        // Ground Diamond Base Plate (Solid fill)
         ctx.beginPath();
         ctx.moveTo(cx, cy - quarterH);
         ctx.lineTo(cx + halfW, cy);
@@ -236,7 +217,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.lineWidth = 0.75;
         ctx.stroke();
 
-        // 2. Base Neon Rim on Ground (The prominent base colour from the reference)
+        // Base Neon Rim on Ground
         const neonGrad = getNeonGradient(ctx, cx - halfW, cy, cx + halfW, cy + quarterH, theme);
         ctx.beginPath();
         ctx.moveTo(cx - halfW, cy);
@@ -246,8 +227,8 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.lineWidth = 1.6;
         ctx.stroke();
 
-        // Crosshair "+" in center if box is not unfolded
-        if (b.foldProgress < 0.25) {
+        // Crosshair "+" if not unfolded
+        if (b.foldProgress < 0.2) {
           ctx.strokeStyle = theme.crosshair;
           ctx.lineWidth = 1;
           ctx.beginPath();
@@ -260,7 +241,6 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
       }
     };
 
-    // Draw static rest frame
     const drawStatic = () => {
       ctx.save();
       ctx.scale(dpr, dpr);
@@ -274,7 +254,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
       ctx.restore();
     };
 
-    // Render loop with unfolding 3D box dynamics
+    // Render loop: 100% Solid opaque cubes + instant snappy response with zero trailing
     const loop = () => {
       ctx.save();
       ctx.scale(dpr, dpr);
@@ -285,17 +265,16 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
       const boxes = boxesRef.current;
       let hasActiveMotion = false;
 
-      // Draw the ground base plates and neon perimeter
+      // 1. Draw base floor plates
       drawBaseLayer(theme, boxes);
 
-      // Physics update: Unfolding spring dynamics
-      const spring = 0.24;
-      const damping = 0.7;
+      // 2. Snappy physics: High spring stiffness + high damping = Instant snappy response without lingering trail
+      const spring = 0.42;
+      const damping = 0.58;
 
       for (let i = 0; i < boxes.length; i++) {
         const b = boxes[i];
         let tFold = 0;
-        let tGlow = 0;
 
         if (mouse.active) {
           const dx = b.x - mouse.x;
@@ -303,37 +282,32 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < interactiveRadius) {
-            // Smooth cosine falloff
-            const factor = Math.cos((dist / interactiveRadius) * (Math.PI / 2));
-            const power = Math.pow(Math.max(0, factor), 1.4);
-
-            tFold = power;
-            tGlow = power;
+            // Sharp cosine curve: drops swiftly to 0 at perimeter to avoid wide lingering halos
+            const norm = dist / interactiveRadius;
+            const factor = Math.cos(norm * (Math.PI / 2));
+            tFold = Math.pow(Math.max(0, factor), 1.8);
           }
         }
 
         b.targetFold = tFold;
-        b.targetGlow = tGlow;
 
-        // Spring integration for unfolding progress
+        // Snappy spring integration
         const foldForce = (b.targetFold - b.foldProgress) * spring;
         b.foldVelocity = (b.foldVelocity + foldForce) * damping;
         b.foldProgress += b.foldVelocity;
 
-        b.glow += (b.targetGlow - b.glow) * 0.2;
-
-        // Snap to zero when settled
-        if (Math.abs(b.foldVelocity) < 0.004 && Math.abs(b.targetFold - b.foldProgress) < 0.004) {
+        // Fast cutoff threshold to completely stop trailing
+        if (Math.abs(b.foldVelocity) < 0.008 && Math.abs(b.targetFold - b.foldProgress) < 0.008) {
           b.foldProgress = b.targetFold;
           b.foldVelocity = 0;
         }
 
-        if (b.foldProgress > 0.01 || Math.abs(b.foldVelocity) > 0.004) {
+        if (b.foldProgress > 0.01 || Math.abs(b.foldVelocity) > 0.008) {
           hasActiveMotion = true;
         }
       }
 
-      // Render unfolding 3D Boxes
+      // 3. Render 100% Solid Opaque 3D Folding Boxes
       const w = boxSize;
       const h = boxSize * 0.5;
       const halfW = w / 2;
@@ -343,20 +317,20 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         const b = boxes[i];
         const fold = Math.max(0, b.foldProgress);
 
-        if (fold < 0.02) continue; // Skip flat folded boxes
+        if (fold < 0.02) continue;
 
         const cx = b.x;
         const baseCy = b.baseY;
         const currentH = maxElevation * fold;
         const topCy = baseCy - currentH;
-        const glow = Math.min(Math.max(b.glow, 0), 1);
 
         ctx.save();
-        // Radial halo removed as requested - keeping crisp base plates and neon pedestal rims
+        // 100% SOLID OPAQUE — Zero transparency so boxes are completely solid!
+        ctx.globalAlpha = 1.0;
 
         const neonGrad = getNeonGradient(ctx, cx - halfW, topCy, cx + halfW, topCy + quarterH, theme);
 
-        // 2. Left Face (Unfolds from ground base up to top diamond)
+        // --- A. Left Face (Solid Opaque) ---
         ctx.beginPath();
         ctx.moveTo(cx - halfW, topCy);
         ctx.lineTo(cx, topCy + quarterH);
@@ -374,7 +348,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.lineWidth = 0.75;
         ctx.stroke();
 
-        // 3. Right Face (Unfolds from ground base up to top diamond)
+        // --- B. Right Face (Solid Opaque) ---
         ctx.beginPath();
         ctx.moveTo(cx, topCy + quarterH);
         ctx.lineTo(cx + halfW, topCy);
@@ -392,7 +366,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.lineWidth = 0.75;
         ctx.stroke();
 
-        // 4. Glowing Neon Base Pedestal Edge (The signature under-rim glow)
+        // --- C. Base Neon Rim on Ground ---
         ctx.beginPath();
         ctx.moveTo(cx - halfW, baseCy);
         ctx.lineTo(cx, baseCy + quarterH);
@@ -401,7 +375,7 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.lineWidth = 2.4 * Math.min(fold * 1.2, 1);
         ctx.stroke();
 
-        // 5. Top Face (Diamond lid that pushes up as box unfolds)
+        // --- D. Top Face (Solid Opaque Diamond Lid) ---
         ctx.beginPath();
         ctx.moveTo(cx, topCy - quarterH);
         ctx.lineTo(cx + halfW, topCy);
@@ -415,16 +389,14 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.fillStyle = topGrad;
         ctx.fill();
 
-        // Top Face Bevel Edge
+        // Crisp White / Silver Bevel Rim
         ctx.save();
         ctx.strokeStyle = theme.topFaceBevel;
         ctx.lineWidth = (theme.isLight ? 1.2 : 1.5) * fold;
-        ctx.shadowColor = theme.topFaceBevelGlow;
-        ctx.shadowBlur = 4 * glow;
         ctx.stroke();
         ctx.restore();
 
-        // 6. Front Center Vertical Crease / Spine
+        // --- E. Front Center Vertical Crease ---
         ctx.beginPath();
         ctx.moveTo(cx, topCy + quarterH);
         ctx.lineTo(cx, baseCy + quarterH);
@@ -432,20 +404,18 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
         ctx.lineWidth = 0.9 * fold;
         ctx.stroke();
 
-        // 7. Tech Corner Brackets when unfolding (matching the reference styling)
-        if (fold > 0.4) {
+        // --- F. Tech Corner Accents (Matching Reference) ---
+        if (fold > 0.45) {
           const bSize = 6 * fold;
           ctx.strokeStyle = neonGrad;
           ctx.lineWidth = 1.2;
 
-          // Left corner bracket
           ctx.beginPath();
           ctx.moveTo(cx - halfW - bSize, topCy);
           ctx.lineTo(cx - halfW, topCy);
           ctx.lineTo(cx - halfW, topCy - bSize * 0.5);
           ctx.stroke();
 
-          // Right corner bracket
           ctx.beginPath();
           ctx.moveTo(cx + halfW + bSize, topCy);
           ctx.lineTo(cx + halfW, topCy);
@@ -496,7 +466,6 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
           x: e.clientX - rect.left,
           y: e.clientY - rect.top,
           active: true,
-          lastMove: performance.now(),
         };
         startLoop();
       } else if (mouseRef.current.active) {
@@ -528,7 +497,6 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
       x: -99999,
       y: -99999,
       active: false,
-      lastMove: performance.now(),
     };
   };
 
