@@ -189,7 +189,8 @@ export const InteractiveBoxesBackground: React.FC<InteractiveBoxesBackgroundProp
 
         if (mouse.active) {
           const dx = b.x - mouse.x;
-          const dy = b.baseY - mouse.y;
+          // Offset baseY by 3D elevation center so the center of effect is centered right on the cursor
+          const dy = (b.baseY - maxElevation * 0.42) - mouse.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < interactiveRadius) {
